@@ -10,7 +10,6 @@ import heatmapRouter from './routes/heatmap';
 import commuteRouter from './routes/commute';
 import { scrapeSwissDevJobs } from './scrapers/swissdevjobs';
 import { scrapeJobsCh } from './scrapers/jobsch';
-import { runFingerprinting } from './scrapers/fingerprint';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -43,14 +42,6 @@ app.post('/api/scrape/jobsch', async (_req, res) => {
         .then((result) => console.log('Jobs.ch done', result))
         .catch(console.error);
     res.json({ message: 'Jobs.ch scraper started — check server logs for progress.' });
-});
-
-app.post('/api/scrape/fingerprint', async (_req, res) => {
-    console.log('\n🚀 Fingerprinting triggered');
-    runFingerprinting()
-        .then((result) => console.log('Fingerprinting done', Object.keys(result).length, 'companies'))
-        .catch(console.error);
-    res.json({ message: 'Fingerprinting agent started — check server logs for progress.' });
 });
 
 // ─── Start ──────────────────────────────────────────────────────────────────────
