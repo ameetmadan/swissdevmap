@@ -2861,7 +2861,7 @@ async function seed() {
         user: process.env.DATABASE_USER,
         password: process.env.DATABASE_PASSWORD,
         database: process.env.DATABASE_NAME,
-        ssl: process.env.NODE_ENV === 'production' ? true : false
+        ssl: import.env.NODE_ENV === 'production' ? true : false
     });
 
     try {
