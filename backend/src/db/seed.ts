@@ -7,27 +7,16 @@ dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 
 // ── Step 0: Ensure the database exists ───────────────────────────────────────
 async function ensureDatabase() {
-    const connStr = process.env.DATABASE_URL!;
-    const url = new URL(connStr);
-    const dbName = url.pathname.replace(/^\//, '');
-
-    // Connect to 'postgres' system DB to create target DB if missing
-    const adminUrl = connStr.replace(`/${dbName}`, '/postgres');
-    const adminPool = new Pool({ connectionString: adminUrl });
-    try {
-        const { rows } = await adminPool.query(
-            `SELECT 1 FROM pg_database WHERE datname = $1`,
-            [dbName]
-        );
-        if (rows.length === 0) {
-            await adminPool.query(`CREATE DATABASE "${dbName}"`);
-            console.log(`🗄️  Created database: ${dbName}`);
-        } else {
-            console.log(`🗄️  Database "${dbName}" already exists.`);
-        }
-    } finally {
-        await adminPool.end();
-    }
+    const pool = new Pool({
+        host: process.env.DATABASE_HOST,
+        user: process.env.DATABASE_USER,
+        password: process.env.DATABASE_PASSWORD,
+        database: process.env.DATABASE_NAME
+    });
+    await pool.query(`
+        CREATE DATABASE IF NOT EXISTS ${process.env.DATABASE_NAME}
+    `);
+    await pool.end();
 }
 
 // ── Step 1: Apply schema DDL (CREATE TABLE IF NOT EXISTS) ─────────────────────
@@ -65,7 +54,6 @@ interface Company {
 }
 
 const companies: Company[] = [
-
     // --- ENTERPRISE ---
     {
         name: 'Swisscom',
@@ -2864,11 +2852,17 @@ const companies: Company[] = [
 
 // ── Main seed function ────────────────────────────────────────────────────────
 async function seed() {
-    // 1. Make sure the DB exists (creates it if missing)
+    // 1. Ensure the database exists
     await ensureDatabase();
 
     // 2. Connect to the target DB
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL! });
+    const pool = new Pool({
+        host: process.env.DATABASE_HOST,
+        user: process.env.DATABASE_USER,
+        password: process.env.DATABASE_PASSWORD,
+        database: process.env.DATABASE_NAME,
+        ssl: process.env.NODE_ENV === 'production' ? true : false
+    });
 
     try {
         // 3. Create tables / extensions if they don't exist
