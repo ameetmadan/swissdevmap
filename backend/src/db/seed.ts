@@ -8,10 +8,7 @@ dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 // ── Step 0: Ensure the database exists ───────────────────────────────────────
 async function ensureDatabase() {
     const pool = new Pool({
-        host: process.env.DATABASE_HOST,
-        user: process.env.DATABASE_USER,
-        password: process.env.DATABASE_PASSWORD,
-        database: process.env.DATABASE_NAME
+        connectionString: process.env.DATABASE_URL,
     });
     await pool.query(`
         CREATE DATABASE IF NOT EXISTS ${process.env.DATABASE_NAME}
@@ -2857,11 +2854,7 @@ async function seed() {
 
     // 2. Connect to the target DB
     const pool = new Pool({
-        host: process.env.DATABASE_HOST,
-        user: process.env.DATABASE_USER,
-        password: process.env.DATABASE_PASSWORD,
-        database: process.env.DATABASE_NAME,
-        ssl: process.env.NODE_ENV === 'production' ? true : false
+        connectionString: process.env.DATABASE_URL,
     });
 
     try {
