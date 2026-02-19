@@ -2,7 +2,7 @@ import { Pool } from 'pg';
 import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
-import { companies } from './seed-data';
+import { companies } from './seed-data.example';
 
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 
