@@ -46,10 +46,18 @@
   color: var(--text-primary);
 }
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+[role="button"] {
+  touch-action: manipulation;
 }
 
 body {
@@ -61,14 +69,19 @@ body {
 
 /* ── App Shell ─────────────────────────────────────────────────────────────── */
 .app-shell {
-  display: flex;
+  display: block;
   height: 100vh;
   width: 100vw;
   position: relative;
+  /* No overflow:hidden — it creates a stacking context that traps fixed children */
 }
 
 /* ── Sidebar ──────────────────────────────────────────────────────────────── */
 .sidebar {
+  /* Desktop: always visible, fixed left overlay */
+  position: fixed;
+  top: 0;
+  left: 0;
   width: var(--sidebar-width);
   height: 100vh;
   background: var(--bg-glass);
@@ -77,18 +90,147 @@ body {
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  z-index: 10;
+  /* Above Leaflet controls (z-index 800) and overlays */
+  z-index: 1000;
+  overflow: hidden;
+  box-shadow: 4px 0 32px rgba(0, 0, 0, 0.5);
+}
+
+/* The scrollable content area inside the sidebar */
+.sidebar-content {
+  flex: 1;
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;
 }
 
+.sidebar-content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar-content::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+/* ── Sticky footer (mobile show-results CTA) ─────────────────────────────── */
+.sidebar-footer {
+  /* Hidden on desktop — the in-content Add button handles it */
+  display: none;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+  background: inherit;
+  flex-shrink: 0;
+}
+
+.btn-show-results {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 16px;
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+  border: none;
+  border-radius: var(--radius-md);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: opacity 0.15s, box-shadow 0.15s;
+  white-space: nowrap;
+}
+
+.btn-show-results:hover {
+  opacity: 0.9;
+  box-shadow: var(--glow-blue);
+}
+
+.btn-add-company {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 13px 14px;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px dashed #3b82f6;
+  border-radius: var(--radius-md);
+  color: #3b82f6;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.btn-add-company:hover {
+  background: rgba(59, 130, 246, 0.18);
+}
+
+
 .sidebar::-webkit-scrollbar {
   width: 4px;
 }
-.sidebar::-webkit-scrollbar-thumb {
+
+.sidebar-content::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: 4px;
+}
+
+/* ── Peek bar (mobile only — hidden on desktop) ───────────────────────────── */
+.sidebar-peek {
+  display: none;
+  /* shown only on mobile via media query */
+  flex-direction: column;
+  cursor: pointer;
+  flex-shrink: 0;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.sidebar-peek-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px 14px;
+}
+
+.sidebar-peek-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sidebar-peek-icon {
+  font-size: 18px;
+}
+
+.sidebar-peek-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.2px;
+}
+
+.sidebar-peek-badge {
+  background: rgba(59, 130, 246, 0.2);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  color: #93c5fd;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+
+.sidebar-peek-chevron {
+  color: var(--text-secondary);
+  transition: transform 0.3s ease;
+}
+
+.sidebar-peek-chevron--open {
+  transform: rotate(180deg);
 }
 
 .sidebar-header {
@@ -182,14 +324,49 @@ body {
   border-color: transparent;
 }
 
-.tag-chip.cat-frontend { background: rgba(59, 130, 246, 0.2); border-color: rgba(59, 130, 246, 0.4); color: #93c5fd; }
-.tag-chip.cat-frontend.active { background: var(--cat-frontend); color: #fff; }
-.tag-chip.cat-backend { background: rgba(16, 185, 129, 0.2); border-color: rgba(16, 185, 129, 0.4); color: #6ee7b7; }
-.tag-chip.cat-backend.active { background: var(--cat-backend); color: #fff; }
-.tag-chip.cat-cloud { background: rgba(245, 158, 11, 0.2); border-color: rgba(245, 158, 11, 0.4); color: #fcd34d; }
-.tag-chip.cat-cloud.active { background: var(--cat-cloud); color: #fff; }
-.tag-chip.cat-devops { background: rgba(139, 92, 246, 0.2); border-color: rgba(139, 92, 246, 0.4); color: #c4b5fd; }
-.tag-chip.cat-devops.active { background: var(--cat-devops); color: #fff; }
+.tag-chip.cat-frontend {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.4);
+  color: #93c5fd;
+}
+
+.tag-chip.cat-frontend.active {
+  background: var(--cat-frontend);
+  color: #fff;
+}
+
+.tag-chip.cat-backend {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #6ee7b7;
+}
+
+.tag-chip.cat-backend.active {
+  background: var(--cat-backend);
+  color: #fff;
+}
+
+.tag-chip.cat-cloud {
+  background: rgba(245, 158, 11, 0.2);
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #fcd34d;
+}
+
+.tag-chip.cat-cloud.active {
+  background: var(--cat-cloud);
+  color: #fff;
+}
+
+.tag-chip.cat-devops {
+  background: rgba(139, 92, 246, 0.2);
+  border-color: rgba(139, 92, 246, 0.4);
+  color: #c4b5fd;
+}
+
+.tag-chip.cat-devops.active {
+  background: var(--cat-devops);
+  color: #fff;
+}
 
 /* ── Heatmap Toggle ──────────────────────────────────────────────────────── */
 .heatmap-row {
@@ -221,7 +398,7 @@ body {
   transition: background 0.2s;
 }
 
-.toggle-switch input:checked + .toggle-track {
+.toggle-switch input:checked+.toggle-track {
   background: var(--accent-blue);
   box-shadow: var(--glow-blue);
 }
@@ -238,7 +415,7 @@ body {
   pointer-events: none;
 }
 
-.toggle-switch input:checked ~ .toggle-thumb {
+.toggle-switch input:checked~.toggle-thumb {
   transform: translateX(18px);
 }
 
@@ -262,10 +439,28 @@ body {
   font-family: 'Inter', sans-serif;
 }
 
-.cloud-btn:hover { border-color: rgba(255,255,255,0.2); color: var(--text-primary); }
-.cloud-btn.aws.active { background: rgba(245, 158, 11, 0.2); border-color: #f59e0b; color: #fcd34d; }
-.cloud-btn.azure.active { background: rgba(59, 130, 246, 0.2); border-color: #3b82f6; color: #93c5fd; }
-.cloud-btn.gcp.active { background: rgba(239, 68, 68, 0.2); border-color: #ef4444; color: #fca5a5; }
+.cloud-btn:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  color: var(--text-primary);
+}
+
+.cloud-btn.aws.active {
+  background: rgba(245, 158, 11, 0.2);
+  border-color: #f59e0b;
+  color: #fcd34d;
+}
+
+.cloud-btn.azure.active {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: #3b82f6;
+  color: #93c5fd;
+}
+
+.cloud-btn.gcp.active {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+  color: #fca5a5;
+}
 
 /* ── Commute Filter ───────────────────────────────────────────────────────── */
 .commute-input-row {
@@ -332,7 +527,7 @@ body {
 }
 
 .btn-ghost:hover {
-  border-color: rgba(255,255,255,0.2);
+  border-color: rgba(255, 255, 255, 0.2);
   color: var(--text-primary);
 }
 
@@ -469,15 +664,16 @@ body {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ── Map top bar ──────────────────────────────────────────────────────────── */
 .map-topbar {
   position: absolute;
   top: 16px;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 16px;
   z-index: 5;
   display: flex;
   gap: 8px;
@@ -505,13 +701,29 @@ body {
   animation: pulse 2s ease-in-out infinite;
 }
 
-.dot-blue { background: var(--accent-blue); box-shadow: 0 0 0 0 rgba(59,130,246,0.5); }
-.dot-green { background: var(--accent-green); }
-.dot-amber { background: var(--accent-amber); }
+.dot-blue {
+  background: var(--accent-blue);
+  box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5);
+}
+
+.dot-green {
+  background: var(--accent-green);
+}
+
+.dot-amber {
+  background: var(--accent-amber);
+}
 
 @keyframes pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(59,130,246,0.5); }
-  50% { box-shadow: 0 0 0 6px rgba(59,130,246,0); }
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5);
+  }
+
+  50% {
+    box-shadow: 0 0 0 6px rgba(59, 130, 246, 0);
+  }
 }
 
 /* ── Heatmap tech selector ────────────────────────────────────────────────── */
@@ -543,9 +755,195 @@ option {
   scrollbar-color: var(--border) transparent;
 }
 
+/* ── Sidebar close button (mobile) ───────────────────────────────────────── */
+.sidebar-close-btn {
+  display: none;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s, background 0.15s;
+  flex-shrink: 0;
+}
+
+.sidebar-close-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+/* ── Mobile sidebar backdrop ──────────────────────────────────────────────── */
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 999;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+
+
+/* ── Bottom sheet drag handle ────────────────────────────────────────────── */
+.sidebar-handle {
+  width: 36px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  margin: 12px auto 8px;
+  flex-shrink: 0;
+}
+
+/* Desktop: close button hidden (sidebar always open) */
+.sidebar-close-btn {
+  display: none;
+}
+
 /* ── Responsive ──────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
+
+  /* Topbar: fixed top-left */
+  .map-topbar {
+    left: 12px;
+    top: 12px;
+    right: 12px;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  /* ── Bottom sheet ─────────────────────────────────────────────────────── */
   .sidebar {
-    width: 280px;
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 85dvh;
+    border-radius: 20px 20px 0 0;
+    border-right: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    /* Solid dark background — no transparency on mobile */
+    background: #0d1521;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
+    /*
+     * Peek state: only the handle + peek bar visible (~68px).
+     * User can always see the bar and knows they can tap it.
+     */
+    transform: translateY(calc(100% - 68px));
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+      box-shadow 0.35s ease;
+    padding-bottom: env(safe-area-inset-bottom, 12px);
+  }
+
+  /* Fully expanded */
+  .sidebar--open {
+    transform: translateY(0);
+    box-shadow: 0 -12px 60px rgba(0, 0, 0, 0.85);
+  }
+
+  /* Show the peek bar on mobile */
+  .sidebar-peek {
+    display: flex;
+  }
+
+  /* Hide normal header on mobile (peek bar is the collapsed header) */
+  .sidebar-header {
+    display: none;
+  }
+
+  /* When expanded, show the header with close button */
+  .sidebar--open .sidebar-header {
+    display: block;
+  }
+
+  .sidebar--open .sidebar-close-btn {
+    display: flex;
+  }
+
+  /* Show sticky footer with CTA on mobile */
+  .sidebar--open .sidebar-footer {
+    display: flex;
+  }
+
+  /* Hide the desktop-only "Add Missing Company" inline button */
+  .sidebar-add-desktop {
+    display: none;
+  }
+
+  /* Backdrop visible on mobile when open */
+  .sidebar-backdrop {
+    display: block;
+  }
+
+  /* Touch-friendlier tag chips */
+  .tag-chip {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+
+  /* Larger toggle hit area */
+  .toggle-switch {
+    width: 44px;
+    height: 24px;
+  }
+
+  .toggle-thumb {
+    width: 18px;
+    height: 18px;
+  }
+
+  .toggle-switch input:checked~.toggle-thumb {
+    transform: translateX(20px);
+  }
+
+  /* font-size 16px prevents iOS auto-zoom on focus */
+  .commute-input {
+    font-size: 16px;
+    padding: 10px 12px;
+  }
+
+  .btn-primary {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+
+  .stat-value {
+    font-size: 22px;
+  }
+
+  .badge-text-hide {
+    display: none;
+  }
+
+  .sdm-popup .leaflet-popup-content-wrapper {
+    max-width: 80vw !important;
+  }
+
+  /* Leaflet zoom controls — sit just above the peek bar */
+  .leaflet-bottom.leaflet-right {
+    bottom: calc(68px + env(safe-area-inset-bottom, 0px) + 8px);
+    right: 12px;
+  }
+}
+
+/* Tablets: sidebar slightly narrower */
+@media (min-width: 769px) and (max-width: 1024px) {
+  :root {
+    --sidebar-width: 280px;
   }
 }
