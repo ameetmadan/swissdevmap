@@ -35,8 +35,8 @@ const CLOUD_OPTIONS = [
 export default function Sidebar() {
     const [isFormOpen, setIsFormOpen] = useState(false);
     const {
-        companies, selectedTags, heatmapActive, heatmapTech,
-        toggleTag, setHeatmapActive, setHeatmapTech,
+        companies, selectedTags, selectedTypes, heatmapActive, heatmapTech,
+        toggleTag, toggleType, setHeatmapActive, setHeatmapTech,
     } = useMapStore();
 
     // Build stats
@@ -142,24 +142,48 @@ export default function Sidebar() {
                 </div>
             </div>
 
-            {/* Tech stack filters */}
-            {TAGS_BY_CATEGORY.map(({ category, label, tags }) => (
-                <div key={category} className="sidebar-section">
-                    <div className="section-label">{label}</div>
-                    <div className="tag-grid">
-                        {tags.map((tag) => (
-                            <button
-                                key={tag}
-                                id={`tag-${tag.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}
-                                className={`tag-chip cat-${category} ${selectedTags.includes(tag) ? 'active' : ''}`}
-                                onClick={() => toggleTag(tag)}
-                            >
-                                {tag}
-                            </button>
-                        ))}
-                    </div>
+            {/* Company Type filters */}
+            <div className="sidebar-section">
+                <div className="section-label">Company Type</div>
+                <div className="tag-grid">
+                    {['Enterprise', 'Fintech', 'Consulting', 'E-Commerce', 'Industrial'].map((type) => (
+                        <button
+                            key={type}
+                            className={`tag-chip ${selectedTypes.includes(type) ? 'active' : ''}`}
+                            onClick={() => toggleType(type)}
+                            style={{
+                                // Fallback styling if .active doesn't cover everything or to differentiate types
+                                backgroundColor: selectedTypes.includes(type) ? '#2563eb' : 'rgba(255,255,255,0.05)',
+                                color: selectedTypes.includes(type) ? 'white' : '#94a3b8',
+                                border: `1px solid ${selectedTypes.includes(type) ? '#2563eb' : 'rgba(255,255,255,0.1)'}`
+                            }}
+                        >
+                            {type}
+                        </button>
+                    ))}
                 </div>
-            ))}
+            </div>
+
+            {/* Tech stack filters */}
+            {
+                TAGS_BY_CATEGORY.map(({ category, label, tags }) => (
+                    <div key={category} className="sidebar-section">
+                        <div className="section-label">{label}</div>
+                        <div className="tag-grid">
+                            {tags.map((tag) => (
+                                <button
+                                    key={tag}
+                                    id={`tag-${tag.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}
+                                    className={`tag-chip cat-${category} ${selectedTags.includes(tag) ? 'active' : ''}`}
+                                    onClick={() => toggleTag(tag)}
+                                >
+                                    {tag}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                ))
+            }
 
             {/* Legend */}
             <div className="sidebar-section">
@@ -204,6 +228,6 @@ export default function Sidebar() {
             </div>
 
             {isFormOpen && <CompanyForm onClose={() => setIsFormOpen(false)} />}
-        </aside>
+        </aside >
     );
 }

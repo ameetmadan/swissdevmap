@@ -8,12 +8,14 @@ export interface Company {
     city: string;
     lat: number;
     lng: number;
+    type?: string;
     tags: { tag: string; category: string }[];
 }
 
 export interface MapState {
     companies: Company[];
     selectedTags: string[];
+    selectedTypes: string[];
     heatmapActive: boolean;
     heatmapTech: string;
     commuteFrom: string;
@@ -24,6 +26,7 @@ export interface MapState {
 
     setCompanies: (companies: Company[]) => void;
     toggleTag: (tag: string) => void;
+    toggleType: (type: string) => void;
     setHeatmapActive: (active: boolean) => void;
     setHeatmapTech: (tech: string) => void;
     setCommuteFrom: (city: string) => void;
@@ -36,6 +39,7 @@ export interface MapState {
 export const useMapStore = create<MapState>((set) => ({
     companies: [],
     selectedTags: [],
+    selectedTypes: [],
     heatmapActive: false,
     heatmapTech: 'React',
     commuteFrom: '',
@@ -50,6 +54,12 @@ export const useMapStore = create<MapState>((set) => ({
             selectedTags: state.selectedTags.includes(tag)
                 ? state.selectedTags.filter((t) => t !== tag)
                 : [...state.selectedTags, tag],
+        })),
+    toggleType: (type) =>
+        set((state) => ({
+            selectedTypes: state.selectedTypes.includes(type)
+                ? state.selectedTypes.filter((t) => t !== type)
+                : [...state.selectedTypes, type],
         })),
     setHeatmapActive: (heatmapActive) => set({ heatmapActive }),
     setHeatmapTech: (heatmapTech) => set({ heatmapTech }),

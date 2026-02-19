@@ -9,7 +9,7 @@ router.get('/', async (req: Request, res: Response) => {
 
   let query = `
     SELECT
-      c.id, c.name, c.uid, c.website, c.city, c.lat, c.lng,
+      c.id, c.name, c.uid, c.website, c.city, c.lat, c.lng, c.type,
       COALESCE(
         json_agg(
           json_build_object('tag', t.tag, 'category', t.category)
@@ -25,14 +25,24 @@ router.get('/', async (req: Request, res: Response) => {
   const conditions: string[] = [];
 
   if (tag) {
-    params.push(tag as string);
-    conditions.push(`c.id IN (
-      SELECT company_id FROM tech_tags WHERE tag ILIKE $${params.length}
-    )`);
+    const tags = Array.isArray(tag) ? tag : [tag];
+    for (const t of tags) {
+      params.push(t as string);
+      conditions.push(`c.id IN (
+        SELECT company_id FROM tech_tags WHERE tag ILIKE $${params.length}
+      )`);
+    }
   }
   if (city) {
     params.push(city as string);
     conditions.push(`c.city ILIKE $${params.length}`);
+  }
+  if (req.query.type) {
+    const types = Array.isArray(req.query.type) ? req.query.type : [req.query.type];
+    // Simply use IN clause for types
+    const placeholders = types.map((_, i) => `$${params.length + i + 1}`).join(', ');
+    types.forEach(t => params.push(t as string));
+    conditions.push(`c.type IN (${placeholders})`);
   }
 
   if (conditions.length > 0) {

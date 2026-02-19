@@ -53,20 +53,22 @@ export default function Map() {
     const heatLayer = useRef<L.Layer | null>(null);
 
     const {
-        companies, heatmapActive, heatmapTech, commuteCompanyIds,
+        companies, heatmapActive, heatmapTech, commuteCompanyIds, commuteFrom,
         setCompanies, setLoading, setSelectedCompany,
-        selectedTags,
+        selectedTags, selectedTypes,
     } = useMapStore();
 
-    // Fetch companies whenever selectedTags change
+    // Fetch companies whenever selectedTags or selectedTypes change
     useEffect(() => {
         setLoading(true);
-        const params = selectedTags.length > 0 ? { tag: selectedTags[0] } : {};
+        const params = new URLSearchParams();
+        selectedTags.forEach(t => params.append('tag', t));
+        selectedTypes.forEach(t => params.append('type', t));
         axios.get('/api/companies', { params })
             .then((res) => setCompanies(res.data))
             .catch(console.error)
             .finally(() => setLoading(false));
-    }, [selectedTags, setCompanies, setLoading]);
+    }, [selectedTags, selectedTypes, setCompanies, setLoading]);
 
     // Init Leaflet map once
     useEffect(() => {
@@ -102,6 +104,11 @@ export default function Map() {
         markersRef.current = [];
 
         for (const company of companies) {
+            // Apply commute filter: if active, hide companies not in range
+            if (commuteFrom && !commuteCompanyIds.includes(company.id)) {
+                continue;
+            }
+
             const isCommute = commuteCompanyIds.includes(company.id);
             const color = CATEGORY_COLORS[getDominantCategory(company.tags)] || '#3b82f6';
             const icon = makeCircleIcon(color, isCommute);
@@ -132,7 +139,7 @@ export default function Map() {
             marker.addTo(map);
             markersRef.current.push(marker);
         }
-    }, [companies, commuteCompanyIds, setSelectedCompany]);
+    }, [companies, commuteCompanyIds, setSelectedCompany, commuteFrom]);
 
     // Heatmap layer (leaflet.heat)
     useEffect(() => {

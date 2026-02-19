@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS companies (
   city        TEXT,
   lat         DOUBLE PRECISION NOT NULL,
   lng         DOUBLE PRECISION NOT NULL,
+  type        TEXT,                      -- e.g. 'Fintech', 'Consulting', 'Enterprise'
   created_at  TIMESTAMPTZ DEFAULT NOW()
 );
 
