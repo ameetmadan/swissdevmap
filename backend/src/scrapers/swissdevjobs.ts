@@ -96,7 +96,7 @@ export async function scrapeSwissDevJobs() {
 
                 if (companyName && tags.length > 0) {
                     // Find or create company
-                    let companyId: string | null = null;
+                    let companyId: string = '';
                     const existing = await pool.query('SELECT id FROM companies WHERE name ILIKE $1', [companyName]);
                     if (existing.rows.length > 0) {
                         companyId = existing.rows[0].id;
