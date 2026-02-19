@@ -1,0 +1,69 @@
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import path from 'path';
+
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+
+import companiesRouter from './routes/companies';
+import heatmapRouter from './routes/heatmap';
+import commuteRouter from './routes/commute';
+import { scrapeSwissDevJobs } from './scrapers/swissdevjobs';
+import { scrapeJobsCh } from './scrapers/jobsch';
+import { runFingerprinting } from './scrapers/fingerprint';
+
+const app = express();
+const PORT = process.env.PORT || 3001;
+
+app.use(cors());
+app.use(express.json());
+
+// ─── Health ────────────────────────────────────────────────────────────────────
+app.get('/health', (_req, res) => {
+    res.json({ status: 'ok', service: 'SwissDevMap API', timestamp: new Date().toISOString() });
+});
+
+// ─── Core API Routes ────────────────────────────────────────────────────────────
+app.use('/api/companies', companiesRouter);
+app.use('/api/heatmap', heatmapRouter);
+app.use('/api/commute', commuteRouter);
+
+// ─── Manual Scraper Triggers ────────────────────────────────────────────────────
+app.post('/api/scrape/swissdevjobs', async (_req, res) => {
+    console.log('\n🚀 Scrape triggered: SwissDevJobs');
+    scrapeSwissDevJobs()
+        .then((result) => console.log('SwissDevJobs done', result))
+        .catch(console.error);
+    res.json({ message: 'SwissDevJobs scraper started — check server logs for progress.' });
+});
+
+app.post('/api/scrape/jobsch', async (_req, res) => {
+    console.log('\n🚀 Scrape triggered: Jobs.ch');
+    scrapeJobsCh()
+        .then((result) => console.log('Jobs.ch done', result))
+        .catch(console.error);
+    res.json({ message: 'Jobs.ch scraper started — check server logs for progress.' });
+});
+
+app.post('/api/scrape/fingerprint', async (_req, res) => {
+    console.log('\n🚀 Fingerprinting triggered');
+    runFingerprinting()
+        .then((result) => console.log('Fingerprinting done', Object.keys(result).length, 'companies'))
+        .catch(console.error);
+    res.json({ message: 'Fingerprinting agent started — check server logs for progress.' });
+});
+
+// ─── Start ──────────────────────────────────────────────────────────────────────
+app.listen(PORT, () => {
+    console.log(`
+  ██████╗ ██╗    ██╗███╗   ███╗
+  ██╔══██╗██║    ██║████╗ ████║
+  ██║  ██║██║ █╗ ██║██╔████╔██║
+  ██║  ██║██║███╗██║██║╚██╔╝██║
+  ██████╔╝╚███╔███╔╝██║ ╚═╝ ██║
+  ╚═════╝  ╚══╝╚══╝ ╚═╝     ╚═╝
+  SwissDevMap API — running on :${PORT}
+  `);
+});
+
+export default app;
