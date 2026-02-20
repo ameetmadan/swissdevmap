@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Map from './components/Map';
 import Sidebar from './components/Sidebar';
 import { useMapStore } from './store/mapStore';
+import { Analytics } from '@vercel/analytics/react';
 
 export default function App() {
     const { loading, companies, heatmapActive, heatmapTech, commuteCompanyIds } = useMapStore();
@@ -55,6 +56,9 @@ export default function App() {
                     onClick={() => setSidebarOpen(false)}
                 />
             )}
+
+            {/* Vercel Analytics */}
+            <Analytics />
         </div>
     );
 }
