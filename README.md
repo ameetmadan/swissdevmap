@@ -76,7 +76,6 @@ swissdevmap/
 │       │   ├── heatmap.ts          # GET /api/heatmap    (GeoJSON points for a tech)
 │       │   └── commute.ts          # POST /api/commute   (travel-time filtering)
 │       ├── scrapers/
-│       │   ├── swissdevjobs.ts     # Scraper for swissdevjobs.ch
 │       │   └── jobsch.ts           # Scraper for jobs.ch
 │       └── index.ts                # Express app entry point
 ├── frontend/
@@ -193,10 +192,6 @@ Returns a GeoJSON `FeatureCollection` of points, each with an `intensity` proper
 ### `POST /api/commute`
 
 Accepts a start address and travel parameters, returns an array of company IDs reachable within the specified time.
-
-### `POST /api/scrape/swissdevjobs`
-
-Triggers the SwissDevJobs scraper (runs in the background; check server logs).
 
 ### `POST /api/scrape/jobsch`
 

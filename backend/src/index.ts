@@ -8,7 +8,6 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 import companiesRouter from './routes/companies';
 import heatmapRouter from './routes/heatmap';
 import commuteRouter from './routes/commute';
-import { scrapeSwissDevJobs } from './scrapers/swissdevjobs';
 import { scrapeJobsCh } from './scrapers/jobsch';
 
 const app = express();
@@ -28,14 +27,6 @@ app.use('/api/heatmap', heatmapRouter);
 app.use('/api/commute', commuteRouter);
 
 // ─── Manual Scraper Triggers ────────────────────────────────────────────────────
-app.post('/api/scrape/swissdevjobs', async (_req, res) => {
-    console.log('\n🚀 Scrape triggered: SwissDevJobs');
-    scrapeSwissDevJobs()
-        .then((result) => console.log('SwissDevJobs done', result))
-        .catch(console.error);
-    res.json({ message: 'SwissDevJobs scraper started — check server logs for progress.' });
-});
-
 app.post('/api/scrape/jobsch', async (_req, res) => {
     console.log('\n🚀 Scrape triggered: Jobs.ch');
     scrapeJobsCh()

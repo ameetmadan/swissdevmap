@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS tech_tags (
 CREATE TABLE IF NOT EXISTS job_postings (
   id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   company_id  UUID REFERENCES companies(id) ON DELETE SET NULL,
-  source      TEXT NOT NULL,             -- 'swissdevjobs' | 'jobsch'
+  source      TEXT NOT NULL,             -- 'jobsch'
   source_url  TEXT,
   title       TEXT,
   raw_text    TEXT,
