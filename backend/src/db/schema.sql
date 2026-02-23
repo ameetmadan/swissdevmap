@@ -44,3 +44,15 @@ CREATE INDEX IF NOT EXISTS idx_companies_lat_lng   ON companies(lat, lng);
 CREATE INDEX IF NOT EXISTS idx_tech_tags_tag        ON tech_tags(tag);
 CREATE INDEX IF NOT EXISTS idx_tech_tags_company    ON tech_tags(company_id);
 CREATE INDEX IF NOT EXISTS idx_tech_tags_category   ON tech_tags(category);
+
+-- API Keys: SHA-256 hashes of issued access keys (raw keys are never stored)
+CREATE TABLE IF NOT EXISTS api_keys (
+  id           UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  label        TEXT NOT NULL,                   -- human-readable name, e.g. "Alice"
+  key_hash     TEXT NOT NULL UNIQUE,            -- SHA-256 hex digest of the raw key
+  enabled      BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at   TIMESTAMPTZ DEFAULT NOW(),
+  last_used_at TIMESTAMPTZ
+);
+
+CREATE INDEX IF NOT EXISTS idx_api_keys_hash ON api_keys(key_hash);
