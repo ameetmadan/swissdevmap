@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import * as Sentry from '@sentry/react';
 import Map from './components/Map';
 import Sidebar from './components/Sidebar';
 import { useMapStore } from './store/mapStore';
@@ -11,7 +12,7 @@ const COMMUTE_MESSAGES = [
     'This is taking longer than expected, please wait…',
 ];
 
-export default function App() {
+function AppInner() {
     const {
         loading, companies, heatmapActive, heatmapTech,
         commuteCompanyIds, commuteLoading, commute429, setCommute429,
@@ -105,3 +106,12 @@ export default function App() {
         </div>
     );
 }
+
+export default Sentry.withErrorBoundary(AppInner, {
+    fallback: (
+        <div style={{ padding: '2rem', textAlign: 'center' }}>
+            <h2>Something went wrong</h2>
+            <p>The error has been reported. Please refresh the page.</p>
+        </div>
+    ),
+});
