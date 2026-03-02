@@ -1,0 +1,23 @@
+{
+  "projectName": "swissdevmap",
+  "generatedAt": "2026-03-02T14:02:00.189Z",
+  "outDir": "./docs",
+  "sections": [
+    {
+      "id": "overview",
+      "title": "Overview",
+      "scope": "system"
+    },
+    {
+      "id": "api-reference",
+      "title": "API Reference",
+      "scope": "exports"
+    },
+    {
+      "id": "getting-started",
+      "title": "Getting Started",
+      "scope": "manual"
+    }
+  ],
+  "fileCount": 16
+}
