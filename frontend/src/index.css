@@ -669,17 +669,26 @@ body {
   }
 }
 
-/* ── Commute loading overlay (above map, below sidebar) ──────────────────── */
+/* ── Commute loading overlay (darkens map, below sidebar) ────────────────── */
 .commute-map-overlay {
   position: absolute;
   inset: 0;
+  background: rgba(8, 12, 20, 0.65);
+  z-index: 50;
+}
+
+/* ── Commute loading indicator (always visible, above sidebar) ───────────── */
+.commute-loading-indicator {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1002;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  background: rgba(8, 12, 20, 0.65);
-  z-index: 50;
   gap: 12px;
+  pointer-events: none;
 }
 
 .commute-overlay-msg {
@@ -714,7 +723,6 @@ body {
   font-size: 13px;
   color: #ef4444;
   max-width: 420px;
-  white-space: nowrap;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45);
   animation: commute-fadein 0.3s ease;
 }

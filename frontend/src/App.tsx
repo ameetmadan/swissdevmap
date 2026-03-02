@@ -64,14 +64,17 @@ export default function App() {
                 </div>
             )}
 
-            {/* Commute loading overlay — sits above map, below sidebar */}
+            {/* Commute loading — dark overlay on map + fixed indicator above everything */}
             {commuteLoading && (
-                <div className="commute-map-overlay">
-                    <div className="spinner" />
-                    <span key={commuteMsgIdx} className="commute-overlay-msg">
-                        {COMMUTE_MESSAGES[commuteMsgIdx]}
-                    </span>
-                </div>
+                <>
+                    <div className="commute-map-overlay" />
+                    <div className="commute-loading-indicator">
+                        <div className="spinner" />
+                        <span key={commuteMsgIdx} className="commute-overlay-msg">
+                            {COMMUTE_MESSAGES[commuteMsgIdx]}
+                        </span>
+                    </div>
+                </>
             )}
 
             {/* 429 rate-limit toast */}
