@@ -3,14 +3,17 @@ import axios from 'axios';
 import { useMapStore } from '../store/mapStore';
 
 export default function CommuteFilter() {
-    const { commuteFrom, commuteMinutes, setCommuteFrom, setCommuteCompanyIds } = useMapStore();
-    const [loading, setLoading] = useState(false);
+    const {
+        commuteFrom, commuteMinutes, commuteLoading,
+        setCommuteFrom, setCommuteCompanyIds, setCommuteLoading, setCommute429,
+    } = useMapStore();
     const [status, setStatus] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
     const [localCity, setLocalCity] = useState(commuteFrom);
 
     const handleFilter = async () => {
         if (!localCity.trim()) return;
-        setLoading(true);
+        setCommuteLoading(true);
+        setCommute429(false);
         setStatus(null);
         setCommuteFrom(localCity);
 
@@ -24,10 +27,14 @@ export default function CommuteFilter() {
                 type: 'success',
                 msg: `${ids.length} companies within ${commuteMinutes} min from ${localCity}`,
             });
-        } catch {
-            setStatus({ type: 'error', msg: 'Could not reach SBB API — check connection' });
+        } catch (err) {
+            if (axios.isAxiosError(err) && err.response?.status === 429) {
+                setCommute429(true);
+            } else {
+                setStatus({ type: 'error', msg: 'Could not reach SBB API — check connection' });
+            }
         } finally {
-            setLoading(false);
+            setCommuteLoading(false);
         }
     };
 
@@ -68,9 +75,9 @@ export default function CommuteFilter() {
                     id="commute-filter-btn"
                     className="btn-primary"
                     onClick={handleFilter}
-                    disabled={loading || !localCity.trim()}
+                    disabled={commuteLoading || !localCity.trim()}
                 >
-                    {loading ? '⏳' : 'Filter'}
+                    {commuteLoading ? '⏳' : 'Filter'}
                 </button>
                 {status && (
                     <button className="btn-ghost" onClick={handleClear} id="commute-clear-btn">Clear</button>

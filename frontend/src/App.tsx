@@ -1,12 +1,34 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Map from './components/Map';
 import Sidebar from './components/Sidebar';
 import { useMapStore } from './store/mapStore';
 import { Analytics } from '@vercel/analytics/react';
 
+const COMMUTE_MESSAGES = [
+    'Fetching commute data…',
+    'Querying SBB API for each city, this takes a moment…',
+    'Still working, almost there…',
+    'This is taking longer than expected, please wait…',
+];
+
 export default function App() {
-    const { loading, companies, heatmapActive, heatmapTech, commuteCompanyIds } = useMapStore();
+    const {
+        loading, companies, heatmapActive, heatmapTech,
+        commuteCompanyIds, commuteLoading, commute429, setCommute429,
+    } = useMapStore();
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [commuteMsgIdx, setCommuteMsgIdx] = useState(0);
+
+    useEffect(() => {
+        if (!commuteLoading) {
+            setCommuteMsgIdx(0);
+            return;
+        }
+        const interval = setInterval(() => {
+            setCommuteMsgIdx((prev) => (prev + 1) % COMMUTE_MESSAGES.length);
+        }, 3000);
+        return () => clearInterval(interval);
+    }, [commuteLoading]);
 
     return (
         <div className="app-shell">
@@ -39,6 +61,24 @@ export default function App() {
                 <div className="loading-overlay">
                     <div className="spinner" />
                     Loading tech data…
+                </div>
+            )}
+
+            {/* Commute loading overlay — sits above map, below sidebar */}
+            {commuteLoading && (
+                <div className="commute-map-overlay">
+                    <div className="spinner" />
+                    <span key={commuteMsgIdx} className="commute-overlay-msg">
+                        {COMMUTE_MESSAGES[commuteMsgIdx]}
+                    </span>
+                </div>
+            )}
+
+            {/* 429 rate-limit toast */}
+            {commute429 && (
+                <div className="commute-toast">
+                    <span>The commute API is currently rate-limited — please try again in a few minutes.</span>
+                    <button onClick={() => setCommute429(false)} aria-label="Dismiss">✕</button>
                 </div>
             )}
 

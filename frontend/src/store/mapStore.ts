@@ -23,6 +23,8 @@ export interface MapState {
     commuteCompanyIds: string[];
     selectedCompany: Company | null;
     loading: boolean;
+    commuteLoading: boolean;
+    commute429: boolean;
 
     setCompanies: (companies: Company[]) => void;
     toggleTag: (tag: string) => void;
@@ -34,6 +36,8 @@ export interface MapState {
     setCommuteCompanyIds: (ids: string[]) => void;
     setSelectedCompany: (company: Company | null) => void;
     setLoading: (loading: boolean) => void;
+    setCommuteLoading: (loading: boolean) => void;
+    setCommute429: (is429: boolean) => void;
 }
 
 export const useMapStore = create<MapState>((set) => ({
@@ -47,6 +51,8 @@ export const useMapStore = create<MapState>((set) => ({
     commuteCompanyIds: [],
     selectedCompany: null,
     loading: false,
+    commuteLoading: false,
+    commute429: false,
 
     setCompanies: (companies) => set({ companies }),
     toggleTag: (tag) =>
@@ -68,4 +74,6 @@ export const useMapStore = create<MapState>((set) => ({
     setCommuteCompanyIds: (commuteCompanyIds) => set({ commuteCompanyIds }),
     setSelectedCompany: (selectedCompany) => set({ selectedCompany }),
     setLoading: (loading) => set({ loading }),
+    setCommuteLoading: (commuteLoading) => set({ commuteLoading }),
+    setCommute429: (commute429) => set({ commute429 }),
 }));

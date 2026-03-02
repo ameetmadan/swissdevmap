@@ -66,6 +66,7 @@ router.get('/', async (req: Request, res: Response) => {
 
         // Step 2: Query SBB API for each destination in parallel (max 8 at a time)
         const reachableCities: Set<string> = new Set();
+        let hit429 = false;
 
         const chunks: string[][] = [];
         for (let i = 0; i < destinations.length; i += 8) {
@@ -113,10 +114,20 @@ router.get('/', async (req: Request, res: Response) => {
                             console.log(`[Commute] No connections found for ${dest}`);
                         }
                     } catch (apiErr: any) {
-                        console.error(`[Commute] SBB API Error for ${dest}:`, apiErr.message);
+                        if (apiErr.response?.status === 429) {
+                            console.warn(`[Commute] SBB API rate-limited (429) for ${dest}`);
+                            hit429 = true;
+                        } else {
+                            console.error(`[Commute] SBB API Error for ${dest}:`, apiErr.message);
+                        }
                     }
                 })
             );
+        }
+
+        if (hit429) {
+            console.warn('[Commute] Aborting: SBB API returned 429 rate limit');
+            return res.status(429).json({ error: 'SBB API rate limit reached — please try again later' });
         }
 
         // Step 3: Return companies in reachable cities
