@@ -671,10 +671,10 @@ body {
 
 /* ── Commute loading overlay (darkens map, below sidebar) ────────────────── */
 .commute-map-overlay {
-  position: absolute;
+  position: fixed;
   inset: 0;
   background: rgba(8, 12, 20, 0.65);
-  z-index: 50;
+  z-index: 1001;
 }
 
 /* ── Commute loading indicator (always visible, above sidebar) ───────────── */
