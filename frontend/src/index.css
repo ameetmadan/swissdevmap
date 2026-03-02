@@ -698,11 +698,11 @@ body {
 
 /* ── Commute 429 toast ────────────────────────────────────────────────────── */
 .commute-toast {
-  position: absolute;
+  position: fixed;
   top: 16px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 55;
+  z-index: 999;
   background: var(--bg-glass);
   backdrop-filter: blur(16px);
   border: 1px solid rgba(239, 68, 68, 0.45);
