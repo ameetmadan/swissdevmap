@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import * as Sentry from '@sentry/react';
 
 Sentry.init({
@@ -10,7 +11,7 @@ Sentry.init({
     ],
 
     // Sample 100% of transactions in dev, 10% in production
-    tracesSampleRate: import.meta.env.PROD ? 0.1 : 1.0,
+    tracesSampleRate: import.meta.env.MODE === 'development' ? 1.0 : 0.1,
 
     // Capture 10% of sessions, 100% of sessions with errors
     replaysSessionSampleRate: 0.1,
