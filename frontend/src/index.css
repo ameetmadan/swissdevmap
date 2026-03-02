@@ -699,7 +699,7 @@ body {
 /* ── Commute 429 toast ────────────────────────────────────────────────────── */
 .commute-toast {
   position: absolute;
-  bottom: 28px;
+  top: 16px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 55;
