@@ -60,8 +60,14 @@ router.get('/', async (req: Request, res: Response) => {
   }
 });
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 // GET /api/companies/:id
 router.get('/:id', async (req: Request, res: Response) => {
+  if (!UUID_RE.test(req.params.id)) {
+    return res.status(404).json({ error: 'Not found' });
+  }
+
   try {
     const { rows } = await pool.query(
       `SELECT c.*, json_agg(json_build_object('tag', t.tag, 'category', t.category)) AS tags
