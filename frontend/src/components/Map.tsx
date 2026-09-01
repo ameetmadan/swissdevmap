@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet.heat';
@@ -51,10 +52,11 @@ export default function Map() {
     const mapInstance = useRef<L.Map | null>(null);
     const markersRef = useRef<L.Marker[]>([]);
     const heatLayer = useRef<L.Layer | null>(null);
+    const navigate = useNavigate();
 
     const {
         companies, heatmapActive, heatmapTech, commuteCompanyIds, commuteFrom,
-        setCompanies, setLoading, setSelectedCompany,
+        setCompanies, setLoading,
         selectedTags, selectedTypes,
     } = useMapStore();
 
@@ -127,19 +129,26 @@ export default function Map() {
                     `<div style="font-family:Inter,sans-serif;min-width:200px">
             <div style="font-size:14px;font-weight:700;color:#e8edf5;margin-bottom:2px">${company.name}</div>
             <div style="font-size:12px;color:#8a9ab5;margin-bottom:10px">📍 ${company.city}</div>
-            <div style="display:flex;flex-wrap:wrap;gap:3px">${tagHtml}</div>
+            <div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:10px">${tagHtml}</div>
+            <button class="sdm-popup-details-btn" style="width:100%;padding:7px 10px;background:rgba(59,130,246,0.12);
+              border:1px solid rgba(59,130,246,0.4);color:#93c5fd;border-radius:6px;font-size:12px;
+              font-weight:600;font-family:Inter,sans-serif;cursor:pointer">View full profile →</button>
           </div>`,
                     {
                         className: 'sdm-popup',
                         maxWidth: 280,
                     }
                 )
-                .on('click', () => setSelectedCompany(company));
+                .on('popupopen', (e) => {
+                    const el = e.popup.getElement();
+                    const btn = el?.querySelector('.sdm-popup-details-btn');
+                    btn?.addEventListener('click', () => navigate(`/company/${company.id}`));
+                });
 
             marker.addTo(map);
             markersRef.current.push(marker);
         }
-    }, [companies, commuteCompanyIds, setSelectedCompany, commuteFrom]);
+    }, [companies, commuteCompanyIds, commuteFrom, navigate]);
 
     // Heatmap layer (leaflet.heat)
     useEffect(() => {

@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
+import { useMatch } from 'react-router-dom';
 import * as Sentry from '@sentry/react';
 import Map from './components/Map';
 import Sidebar from './components/Sidebar';
+import CompanyDetailModal from './components/CompanyDetailModal';
 import { useMapStore } from './store/mapStore';
 import { Analytics } from '@vercel/analytics/react';
 
@@ -19,6 +21,7 @@ function AppInner() {
     } = useMapStore();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [commuteMsgIdx, setCommuteMsgIdx] = useState(0);
+    const companyRouteMatch = useMatch('/company/:id');
 
     useEffect(() => {
         if (!commuteLoading) {
@@ -99,6 +102,11 @@ function AppInner() {
                     className="sidebar-backdrop"
                     onClick={() => setSidebarOpen(false)}
                 />
+            )}
+
+            {/* Company detail modal — driven by the /company/:id route, rendered over the map */}
+            {companyRouteMatch?.params.id && (
+                <CompanyDetailModal companyId={companyRouteMatch.params.id} />
             )}
 
             {/* Vercel Analytics */}
