@@ -96,6 +96,16 @@ body {
   box-shadow: 4px 0 32px rgba(0, 0, 0, 0.5);
 }
 
+@media (min-width: 769px) {
+  .sidebar {
+    transition: transform 0.3s ease;
+  }
+
+  .sidebar--closed {
+    transform: translateX(calc(-100% - 8px));
+  }
+}
+
 /* The scrollable content area inside the sidebar */
 .sidebar-content {
   flex: 1;
@@ -826,6 +836,13 @@ body {
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
+  transition: left 0.3s ease;
+}
+
+@media (min-width: 769px) {
+  .map-topbar--drawer-closed {
+    left: 16px;
+  }
 }
 
 .map-badge {
@@ -847,6 +864,34 @@ body {
   height: 6px;
   border-radius: 50%;
   animation: pulse 2s ease-in-out infinite;
+}
+
+.company-drawer-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin: -3px -7px -3px 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: var(--text-secondary);
+  background: transparent;
+  cursor: pointer;
+}
+
+.company-drawer-toggle:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.company-drawer-toggle svg {
+  transition: transform 0.2s ease;
+}
+
+.company-drawer-toggle--open svg {
+  transform: rotate(180deg);
 }
 
 .active-filters {
@@ -1072,6 +1117,10 @@ option {
   .sidebar--open {
     transform: translateY(0);
     box-shadow: 0 -12px 60px rgba(0, 0, 0, 0.85);
+  }
+
+  .sidebar--closed {
+    transform: translateY(calc(100% - 68px));
   }
 
   /* Show the peek bar on mobile */

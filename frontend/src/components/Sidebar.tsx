@@ -71,10 +71,11 @@ export default function Sidebar({ isOpen, onOpen, onClose }: SidebarProps) {
     }, []);
 
     useLayoutEffect(() => {
-        contentRef.current?.toggleAttribute('inert', isMobile && !isOpen);
+        contentRef.current?.toggleAttribute('inert', !isOpen);
     }, [isMobile, isOpen]);
 
     useEffect(() => {
+        if (!isMobile) return;
         if (isOpen && !wasOpenRef.current) {
             panelRef.current?.querySelector<HTMLElement>(
                 '.sidebar-content button:not([disabled]), .sidebar-content input:not([disabled]), .sidebar-content select:not([disabled]), .sidebar-content [tabindex="0"]',
@@ -83,7 +84,7 @@ export default function Sidebar({ isOpen, onOpen, onClose }: SidebarProps) {
             peekButtonRef.current?.focus();
         }
         wasOpenRef.current = isOpen;
-    }, [isOpen]);
+    }, [isMobile, isOpen]);
 
     useEffect(() => {
         if (!isMobile || !isOpen) return;
@@ -118,7 +119,8 @@ export default function Sidebar({ isOpen, onOpen, onClose }: SidebarProps) {
     return (
         <aside
             ref={panelRef}
-            className={`sidebar${isOpen ? ' sidebar--open' : ''}`}
+            id="company-sidebar"
+            className={`sidebar${isOpen ? ' sidebar--open' : ' sidebar--closed'}`}
             role={isMobile && isOpen ? 'dialog' : undefined}
             aria-modal={isMobile && isOpen ? true : undefined}
             aria-label="Map filters"
@@ -161,7 +163,7 @@ export default function Sidebar({ isOpen, onOpen, onClose }: SidebarProps) {
                 id="sidebar-filter-panel"
                 role="region"
                 aria-label="Filter controls"
-                aria-hidden={isMobile && !isOpen}
+                aria-hidden={!isOpen}
             >
                 {/* Header */}
                 <div className="sidebar-header">
