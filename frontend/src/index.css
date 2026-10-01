@@ -310,6 +310,12 @@ body {
   margin-bottom: 0;
 }
 
+.company-results-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .company-results-count {
   color: var(--text-secondary);
   font-size: 12px;
@@ -847,6 +853,49 @@ body {
   height: 6px;
   border-radius: 50%;
   animation: pulse 2s ease-in-out infinite;
+}
+
+.company-list-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin: -3px -7px -3px 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: var(--text-secondary);
+  background: transparent;
+  cursor: pointer;
+}
+
+.company-list-toggle:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.company-list-toggle svg {
+  transition: transform 0.2s ease;
+}
+
+.company-list-toggle--open svg {
+  transform: rotate(180deg);
+}
+
+.company-results-content {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.25s ease;
+}
+
+.company-results-content--open {
+  grid-template-rows: 1fr;
+}
+
+.company-results-content-inner {
+  min-height: 0;
+  overflow: hidden;
 }
 
 .active-filters {

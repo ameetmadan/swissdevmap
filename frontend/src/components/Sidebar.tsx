@@ -41,12 +41,14 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen, onOpen, onClose }: SidebarProps) {
     const [isFormOpen, setIsFormOpen] = useState(false);
+    const [isCompanyListOpen, setIsCompanyListOpen] = useState(true);
     const [isMobile, setIsMobile] = useState(
         () => typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches,
     );
     const peekButtonRef = useRef<HTMLButtonElement>(null);
     const panelRef = useRef<HTMLElement>(null);
     const contentRef = useRef<HTMLDivElement>(null);
+    const companyListRef = useRef<HTMLDivElement>(null);
     const wasOpenRef = useRef(isOpen);
     const navigate = useNavigate();
     const {
@@ -73,6 +75,10 @@ export default function Sidebar({ isOpen, onOpen, onClose }: SidebarProps) {
     useLayoutEffect(() => {
         contentRef.current?.toggleAttribute('inert', isMobile && !isOpen);
     }, [isMobile, isOpen]);
+
+    useLayoutEffect(() => {
+        companyListRef.current?.toggleAttribute('inert', !isCompanyListOpen);
+    }, [isCompanyListOpen]);
 
     useEffect(() => {
         if (isOpen && !wasOpenRef.current) {
@@ -210,33 +216,56 @@ export default function Sidebar({ isOpen, onOpen, onClose }: SidebarProps) {
                 <section className="sidebar-section company-results" aria-labelledby="company-results-title">
                     <div className="company-results-heading">
                         <div className="section-label" id="company-results-title">Companies</div>
-                        <span className="company-results-count" aria-live="polite">{visibleCompanies.length}</span>
+                        <div className="company-results-actions">
+                            <span className="company-results-count" aria-live="polite">{visibleCompanies.length}</span>
+                            <button
+                                type="button"
+                                className={`company-list-toggle${isCompanyListOpen ? ' company-list-toggle--open' : ''}`}
+                                onClick={() => setIsCompanyListOpen((open) => !open)}
+                                aria-label={isCompanyListOpen ? 'Close company list' : 'Open company list'}
+                                aria-expanded={isCompanyListOpen}
+                                aria-controls="company-results-content"
+                            >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                    <path d="m6 9 6 6 6-6" />
+                                </svg>
+                            </button>
+                        </div>
                     </div>
-                    {visibleCompanies.length ? (
-                        <ul className="company-results-list" aria-label="Matching companies">
-                            {visibleCompanies.map((company) => (
-                                <li key={company.id}>
-                                    <button
-                                        type="button"
-                                        className={`company-result${selectedCompanyId === company.id ? ' company-result--selected' : ''}`}
-                                        aria-current={selectedCompanyId === company.id ? 'true' : undefined}
-                                        aria-label={`${company.name}, ${company.city}${company.type ? `, ${company.type}` : ''}. Open company profile and show map marker`}
-                                        onClick={() => {
-                                            setSelectedCompanyId(company.id);
-                                            navigate(`/company/${company.id}`);
-                                            if (window.matchMedia('(max-width: 768px)').matches) onClose();
-                                        }}
-                                    >
-                                        <span className="company-result-name">{company.name}</span>
-                                        <span className="company-result-meta">{company.city}{company.type ? ` · ${company.type}` : ''}</span>
-                                        <span className="company-result-tags">{company.tags.slice(0, 3).map(({ tag }) => tag).join(' · ')}</span>
-                                    </button>
-                                </li>
-                            ))}
-                        </ul>
-                    ) : (
-                        <p className="company-results-empty">No companies match these filters.</p>
-                    )}
+                    <div
+                        ref={companyListRef}
+                        className={`company-results-content${isCompanyListOpen ? ' company-results-content--open' : ''}`}
+                        id="company-results-content"
+                        aria-hidden={!isCompanyListOpen}
+                    >
+                        <div className="company-results-content-inner">
+                            {visibleCompanies.length ? (
+                                <ul className="company-results-list" aria-label="Matching companies">
+                                    {visibleCompanies.map((company) => (
+                                        <li key={company.id}>
+                                            <button
+                                                type="button"
+                                                className={`company-result${selectedCompanyId === company.id ? ' company-result--selected' : ''}`}
+                                                aria-current={selectedCompanyId === company.id ? 'true' : undefined}
+                                                aria-label={`${company.name}, ${company.city}${company.type ? `, ${company.type}` : ''}. Open company profile and show map marker`}
+                                                onClick={() => {
+                                                    setSelectedCompanyId(company.id);
+                                                    navigate(`/company/${company.id}`);
+                                                    if (window.matchMedia('(max-width: 768px)').matches) onClose();
+                                                }}
+                                            >
+                                                <span className="company-result-name">{company.name}</span>
+                                                <span className="company-result-meta">{company.city}{company.type ? ` · ${company.type}` : ''}</span>
+                                                <span className="company-result-tags">{company.tags.slice(0, 3).map(({ tag }) => tag).join(' · ')}</span>
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p className="company-results-empty">No companies match these filters.</p>
+                            )}
+                        </div>
+                    </div>
                 </section>
 
                 {/* Commute Filter */}
