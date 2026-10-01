@@ -62,14 +62,21 @@ export default function Map() {
 
     // Fetch companies whenever selectedTags or selectedTypes change
     useEffect(() => {
+        const controller = new AbortController();
         setLoading(true);
         const params = new URLSearchParams();
         selectedTags.forEach(t => params.append('tag', t));
         selectedTypes.forEach(t => params.append('type', t));
-        axios.get('/api/companies', { params })
+        axios.get('/api/companies', { params, signal: controller.signal })
             .then((res) => setCompanies(res.data))
-            .catch(console.error)
-            .finally(() => setLoading(false));
+            .catch((error) => {
+                if (!controller.signal.aborted) console.error(error);
+            })
+            .finally(() => {
+                if (!controller.signal.aborted) setLoading(false);
+            });
+
+        return () => controller.abort();
     }, [selectedTags, selectedTypes, setCompanies, setLoading]);
 
     // Init Leaflet map once
