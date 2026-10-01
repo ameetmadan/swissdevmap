@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useMapStore } from '../store/mapStore';
 import CommuteFilter from './CommuteFilter';
 import CompanyForm from './CompanyForm';
@@ -41,6 +41,13 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen, onOpen, onClose }: SidebarProps) {
     const [isFormOpen, setIsFormOpen] = useState(false);
+    const [isMobile, setIsMobile] = useState(
+        () => typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches,
+    );
+    const peekButtonRef = useRef<HTMLButtonElement>(null);
+    const panelRef = useRef<HTMLElement>(null);
+    const contentRef = useRef<HTMLDivElement>(null);
+    const wasOpenRef = useRef(isOpen);
     const navigate = useNavigate();
     const {
         companies, selectedTags, selectedTypes, heatmapActive, heatmapTech,
@@ -55,26 +62,88 @@ export default function Sidebar({ isOpen, onOpen, onClose }: SidebarProps) {
     const tagCount = [...new Set(companies.flatMap((c) => c.tags.map((t) => t.tag)))].length;
     const cityCount = [...new Set(companies.map((c) => c.city))].length;
 
+    useEffect(() => {
+        const mediaQuery = window.matchMedia('(max-width: 768px)');
+        const updateIsMobile = () => setIsMobile(mediaQuery.matches);
+        updateIsMobile();
+        mediaQuery.addEventListener('change', updateIsMobile);
+        return () => mediaQuery.removeEventListener('change', updateIsMobile);
+    }, []);
+
+    useLayoutEffect(() => {
+        contentRef.current?.toggleAttribute('inert', isMobile && !isOpen);
+    }, [isMobile, isOpen]);
+
+    useEffect(() => {
+        if (isOpen && !wasOpenRef.current) {
+            panelRef.current?.querySelector<HTMLElement>(
+                '.sidebar-content button:not([disabled]), .sidebar-content input:not([disabled]), .sidebar-content select:not([disabled]), .sidebar-content [tabindex="0"]',
+            )?.focus();
+        } else if (!isOpen && wasOpenRef.current) {
+            peekButtonRef.current?.focus();
+        }
+        wasOpenRef.current = isOpen;
+    }, [isOpen]);
+
+    useEffect(() => {
+        if (!isMobile || !isOpen) return;
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                onClose();
+                return;
+            }
+            if (event.key !== 'Tab' || !panelRef.current) return;
+
+            const focusableElements = Array.from(panelRef.current.querySelectorAll<HTMLElement>(
+                'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+            )).filter((element) => element.getClientRects().length > 0);
+            const firstElement = focusableElements[0];
+            const lastElement = focusableElements[focusableElements.length - 1];
+
+            if (!firstElement || !lastElement) {
+                event.preventDefault();
+                panelRef.current.focus();
+            } else if (event.shiftKey && (document.activeElement === firstElement || !panelRef.current.contains(document.activeElement))) {
+                event.preventDefault();
+                lastElement.focus();
+            } else if (!event.shiftKey && (document.activeElement === lastElement || !panelRef.current.contains(document.activeElement))) {
+                event.preventDefault();
+                firstElement.focus();
+            }
+        };
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [isMobile, isOpen, onClose]);
+
     return (
-        <aside className={`sidebar${isOpen ? ' sidebar--open' : ''}`}>
+        <aside
+            ref={panelRef}
+            className={`sidebar${isOpen ? ' sidebar--open' : ''}`}
+            role={isMobile && isOpen ? 'dialog' : undefined}
+            aria-modal={isMobile && isOpen ? true : undefined}
+            aria-label="Map filters"
+        >
 
             {/* ── Mobile peek bar ────────────────────────────────────────── */}
             {/* Always visible at the bottom on mobile; tap to expand */}
-            <div
+            <button
+                ref={peekButtonRef}
+                type="button"
                 className="sidebar-peek"
                 onClick={() => isOpen ? onClose() : onOpen()}
-                role="button"
                 aria-label={isOpen ? 'Collapse filters' : 'Expand filters'}
+                aria-expanded={isOpen}
+                aria-controls="sidebar-filter-panel"
             >
-                <div className="sidebar-handle" />
-                <div className="sidebar-peek-content">
-                    <div className="sidebar-peek-left">
+                <span className="sidebar-handle" />
+                <span className="sidebar-peek-content">
+                    <span className="sidebar-peek-left">
                         <span className="sidebar-peek-icon">🗺️</span>
                         <span className="sidebar-peek-label">SwissDevMap</span>
                         {selectedTags.length > 0 && (
                             <span className="sidebar-peek-badge">{selectedTags.length} filters</span>
                         )}
-                    </div>
+                    </span>
                     <svg
                         className={`sidebar-peek-chevron${isOpen ? ' sidebar-peek-chevron--open' : ''}`}
                         width="18" height="18" viewBox="0 0 24 24" fill="none"
@@ -82,11 +151,18 @@ export default function Sidebar({ isOpen, onOpen, onClose }: SidebarProps) {
                     >
                         <polyline points="18 15 12 9 6 15" />
                     </svg>
-                </div>
-            </div>
+                </span>
+            </button>
 
             {/* ── Sidebar content (scrolls) ────────────────────────────── */}
-            <div className="sidebar-content">
+            <div
+                ref={contentRef}
+                className="sidebar-content"
+                id="sidebar-filter-panel"
+                role="region"
+                aria-label="Filter controls"
+                aria-hidden={isMobile && !isOpen}
+            >
                 {/* Header */}
                 <div className="sidebar-header">
                     <div className="logo">

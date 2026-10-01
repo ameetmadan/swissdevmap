@@ -128,9 +128,11 @@ function AppInner() {
 
             {/* Backdrop — tapping outside closes the sheet on mobile */}
             {sidebarOpen && (
-                <div
+                <button
+                    type="button"
                     className="sidebar-backdrop"
                     onClick={() => setSidebarOpen(false)}
+                    aria-label="Close map filters"
                 />
             )}
 
