@@ -28,6 +28,7 @@ export interface MapState {
     setCompanies: (companies: Company[]) => void;
     toggleTag: (tag: string) => void;
     toggleType: (type: string) => void;
+    clearFilters: () => void;
     setHeatmapActive: (active: boolean) => void;
     setHeatmapTech: (tech: string) => void;
     setCommuteFrom: (city: string) => void;
@@ -64,6 +65,7 @@ export const useMapStore = create<MapState>((set) => ({
                 ? state.selectedTypes.filter((t) => t !== type)
                 : [...state.selectedTypes, type],
         })),
+    clearFilters: () => set({ selectedTags: [], selectedTypes: [] }),
     setHeatmapActive: (heatmapActive) => set({ heatmapActive }),
     setHeatmapTech: (heatmapTech) => set({ heatmapTech }),
     setCommuteFrom: (commuteFrom) => set({ commuteFrom }),
