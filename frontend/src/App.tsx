@@ -20,7 +20,7 @@ function AppInner() {
         commuteCompanyIds, commuteLoading, commute429, setCommute429,
         selectedTags, selectedTypes, toggleTag, toggleType, clearFilters,
     } = useMapStore();
-    const [sidebarOpen, setSidebarOpen] = useState(() => !window.matchMedia('(max-width: 768px)').matches);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
     const [commuteMsgIdx, setCommuteMsgIdx] = useState(0);
     const companyRouteMatch = useMatch('/company/:id');
 
@@ -41,21 +41,10 @@ function AppInner() {
             <Map />
 
             {/* Topbar badges — always visible over the map */}
-            <div className={`map-topbar${sidebarOpen ? '' : ' map-topbar--drawer-closed'}`}>
+            <div className="map-topbar">
                 <div className="map-badge">
                     <span className="dot dot-blue" />
-                    <span>{companies.length} companies</span>
-                    <button
-                        className={`company-drawer-toggle${sidebarOpen ? ' company-drawer-toggle--open' : ''}`}
-                        onClick={() => setSidebarOpen((open) => !open)}
-                        aria-label={sidebarOpen ? 'Close company list' : 'Open company list'}
-                        aria-expanded={sidebarOpen}
-                        aria-controls="company-sidebar"
-                    >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                            <path d="m6 9 6 6 6-6" />
-                        </svg>
-                    </button>
+                    {companies.length} companies
                 </div>
                 {heatmapActive && (
                     <div className="map-badge">
