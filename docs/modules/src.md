@@ -39,7 +39,7 @@ Bootstraps the Express application. Registers the following:
 
 - **CORS** middleware
 - **Routes**: `/companies`, `/heatmap`, `/commute`
-- **API key middleware** for protected endpoints
+- **Rate limiting** for public frontend API routes and API key middleware for administrative endpoints
 - **Scraper initialization** (`scrapeJobsCh`) on startup
 
 ---

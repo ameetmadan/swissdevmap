@@ -54,14 +54,14 @@ Adjust the values to match your local PostgreSQL setup.
 
 ### API Keys
 
-The backend protects certain routes with API key middleware (`backend/src/middleware/apiKey.ts`). To generate an API key, run the provided script:
+Administrative routes such as manual scraper triggers use API key middleware (`backend/src/middleware/apiKey.ts`). Frontend data routes are public and rate-limited; never put an API key in a `VITE_` variable because Vite bundles those values into browser JavaScript. To generate an administrative API key, run the provided script:
 
 ```bash
 cd backend
 npx ts-node src/scripts/generate-api-key.ts
 ```
 
-Store the generated key securely — you will need it to authenticate requests to protected endpoints.
+Store the generated key securely on the server that calls administrative endpoints.
 
 If you have existing API keys to migrate, use:
 
