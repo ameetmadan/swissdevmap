@@ -18,6 +18,7 @@ function AppInner() {
     const {
         loading, companies, heatmapActive, heatmapTech,
         commuteCompanyIds, commuteLoading, commute429, setCommute429,
+        selectedTags, selectedTypes, toggleTag, toggleType, clearFilters,
     } = useMapStore();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [commuteMsgIdx, setCommuteMsgIdx] = useState(0);
@@ -56,6 +57,35 @@ function AppInner() {
                         <span className="dot dot-green" />
                         {commuteCompanyIds.length}
                         <span className="badge-text-hide"> in commute</span>
+                    </div>
+                )}
+                {(selectedTags.length > 0 || selectedTypes.length > 0) && (
+                    <div className="active-filters" role="group" aria-label="Active filters">
+                        <div className="active-filter-chips">
+                            {selectedTags.map((tag) => (
+                                <button
+                                    className="active-filter-chip"
+                                    key={`technology-${tag}`}
+                                    onClick={() => toggleTag(tag)}
+                                    aria-label={`Remove technology filter ${tag}`}
+                                >
+                                    <span>Technology: {tag}</span><span aria-hidden="true">×</span>
+                                </button>
+                            ))}
+                            {selectedTypes.map((type) => (
+                                <button
+                                    className="active-filter-chip"
+                                    key={`company-type-${type}`}
+                                    onClick={() => toggleType(type)}
+                                    aria-label={`Remove company type filter ${type}`}
+                                >
+                                    <span>Company type: {type}</span><span aria-hidden="true">×</span>
+                                </button>
+                            ))}
+                        </div>
+                        <button className="clear-filters-button" onClick={clearFilters}>
+                            Clear all
+                        </button>
                     </div>
                 )}
             </div>
