@@ -21,6 +21,7 @@ export interface MapState {
     commuteFrom: string;
     commuteMinutes: number;
     commuteCompanyIds: string[];
+    selectedCompanyId: string | null;
     loading: boolean;
     commuteLoading: boolean;
     commute429: boolean;
@@ -28,11 +29,13 @@ export interface MapState {
     setCompanies: (companies: Company[]) => void;
     toggleTag: (tag: string) => void;
     toggleType: (type: string) => void;
+    clearFilters: () => void;
     setHeatmapActive: (active: boolean) => void;
     setHeatmapTech: (tech: string) => void;
     setCommuteFrom: (city: string) => void;
     setCommuteMinutes: (min: number) => void;
     setCommuteCompanyIds: (ids: string[]) => void;
+    setSelectedCompanyId: (id: string | null) => void;
     setLoading: (loading: boolean) => void;
     setCommuteLoading: (loading: boolean) => void;
     setCommute429: (is429: boolean) => void;
@@ -47,6 +50,7 @@ export const useMapStore = create<MapState>((set) => ({
     commuteFrom: '',
     commuteMinutes: 30,
     commuteCompanyIds: [],
+    selectedCompanyId: null,
     loading: false,
     commuteLoading: false,
     commute429: false,
@@ -64,11 +68,13 @@ export const useMapStore = create<MapState>((set) => ({
                 ? state.selectedTypes.filter((t) => t !== type)
                 : [...state.selectedTypes, type],
         })),
+    clearFilters: () => set({ selectedTags: [], selectedTypes: [] }),
     setHeatmapActive: (heatmapActive) => set({ heatmapActive }),
     setHeatmapTech: (heatmapTech) => set({ heatmapTech }),
     setCommuteFrom: (commuteFrom) => set({ commuteFrom }),
     setCommuteMinutes: (commuteMinutes) => set({ commuteMinutes }),
     setCommuteCompanyIds: (commuteCompanyIds) => set({ commuteCompanyIds }),
+    setSelectedCompanyId: (selectedCompanyId) => set({ selectedCompanyId }),
     setLoading: (loading) => set({ loading }),
     setCommuteLoading: (commuteLoading) => set({ commuteLoading }),
     setCommute429: (commute429) => set({ commute429 }),

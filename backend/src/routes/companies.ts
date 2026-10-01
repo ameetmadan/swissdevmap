@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { pool } from '../db/pool';
+import { companySubmissionLimiter } from '../middleware/rateLimit';
 
 const router = Router();
 
@@ -85,7 +86,7 @@ router.get('/:id', async (req: Request, res: Response) => {
 });
 
 // POST /api/companies
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', companySubmissionLimiter, async (req: Request, res: Response) => {
   const { name, uid, website, city, lat, lng, tags } = req.body;
 
   // Basic validation

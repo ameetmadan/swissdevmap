@@ -21,6 +21,19 @@ const CATEGORY_COLORS: Record<string, string> = {
     devops: '#8b5cf6',
 };
 
+function escapeHtml(value: string | null | undefined): string {
+    return (value ?? '').replace(/[&<>"']/g, (character) => {
+        const entities: Record<string, string> = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;',
+        };
+        return entities[character];
+    });
+}
+
 function getDominantCategory(tags: Company['tags']): string {
     if (!tags || tags.length === 0) return 'backend';
     const counts: Record<string, number> = {};
@@ -28,17 +41,18 @@ function getDominantCategory(tags: Company['tags']): string {
     return Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
 }
 
-function makeCircleIcon(color: string, isCommute: boolean) {
-    const ring = isCommute ? `stroke:#06b6d4;stroke-width:3;` : `stroke:rgba(255,255,255,0.3);stroke-width:1;`;
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20">
-    <circle cx="10" cy="10" r="8" fill="${color}" fill-opacity="0.9" ${ring}/>
+function makeCircleIcon(color: string, isCommute: boolean, isSelected: boolean) {
+    const ringColor = isSelected ? '#ffffff' : isCommute ? '#06b6d4' : 'rgba(255,255,255,0.3)';
+    const ringWidth = isSelected ? 4 : isCommute ? 3 : 1;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">
+    <circle cx="14" cy="14" r="10" fill="${color}" fill-opacity="0.9" stroke="${ringColor}" stroke-width="${ringWidth}"/>
   </svg>`;
     return L.divIcon({
         html: svg,
         className: '',
-        iconSize: [20, 20],
-        iconAnchor: [10, 10],
-        popupAnchor: [0, -12],
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+        popupAnchor: [0, -16],
     });
 }
 
@@ -51,6 +65,7 @@ export default function Map() {
     const mapRef = useRef<HTMLDivElement>(null);
     const mapInstance = useRef<L.Map | null>(null);
     const markersRef = useRef<L.Marker[]>([]);
+    const companyMarkersRef = useRef<globalThis.Map<string, L.Marker>>(new globalThis.Map());
     const heatLayer = useRef<L.Layer | null>(null);
     const navigate = useNavigate();
 
@@ -58,18 +73,26 @@ export default function Map() {
         companies, heatmapActive, heatmapTech, commuteCompanyIds, commuteFrom,
         setCompanies, setLoading,
         selectedTags, selectedTypes,
+        selectedCompanyId,
     } = useMapStore();
 
     // Fetch companies whenever selectedTags or selectedTypes change
     useEffect(() => {
+        const controller = new AbortController();
         setLoading(true);
         const params = new URLSearchParams();
         selectedTags.forEach(t => params.append('tag', t));
         selectedTypes.forEach(t => params.append('type', t));
-        axios.get('/api/companies', { params })
+        axios.get('/api/companies', { params, signal: controller.signal })
             .then((res) => setCompanies(res.data))
-            .catch(console.error)
-            .finally(() => setLoading(false));
+            .catch((error) => {
+                if (!controller.signal.aborted) console.error(error);
+            })
+            .finally(() => {
+                if (!controller.signal.aborted) setLoading(false);
+            });
+
+        return () => controller.abort();
     }, [selectedTags, selectedTypes, setCompanies, setLoading]);
 
     // Init Leaflet map once
@@ -104,6 +127,7 @@ export default function Map() {
         // Clear old markers
         markersRef.current.forEach((m) => m.remove());
         markersRef.current = [];
+        companyMarkersRef.current.clear();
 
         for (const company of companies) {
             // Apply commute filter: if active, hide companies not in range
@@ -113,7 +137,7 @@ export default function Map() {
 
             const isCommute = commuteCompanyIds.includes(company.id);
             const color = CATEGORY_COLORS[getDominantCategory(company.tags)] || '#3b82f6';
-            const icon = makeCircleIcon(color, isCommute);
+            const icon = makeCircleIcon(color, isCommute, company.id === selectedCompanyId);
 
             const tagHtml = company.tags
                 .slice(0, 8)
@@ -121,14 +145,14 @@ export default function Map() {
                     `<span style="display:inline-block;padding:2px 8px;margin:2px;border-radius:20px;font-size:10px;font-weight:500;
                         background:${CATEGORY_COLORS[t.category] || '#4a5568'}33;
                         color:${CATEGORY_COLORS[t.category] || '#8a9ab5'};
-                        border:1px solid ${CATEGORY_COLORS[t.category] || '#4a5568'}55">${t.tag}</span>`
+                        border:1px solid ${CATEGORY_COLORS[t.category] || '#4a5568'}55">${escapeHtml(t.tag)}</span>`
                 ).join('');
 
             const marker = L.marker([company.lat, company.lng], { icon })
                 .bindPopup(
                     `<div style="font-family:Inter,sans-serif;min-width:200px">
-            <div style="font-size:14px;font-weight:700;color:#e8edf5;margin-bottom:2px">${company.name}</div>
-            <div style="font-size:12px;color:#8a9ab5;margin-bottom:10px">📍 ${company.city}</div>
+            <div style="font-size:14px;font-weight:700;color:#e8edf5;margin-bottom:2px">${escapeHtml(company.name)}</div>
+            <div style="font-size:12px;color:#8a9ab5;margin-bottom:10px">📍 ${escapeHtml(company.city)}</div>
             <div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:10px">${tagHtml}</div>
             <button class="sdm-popup-details-btn" style="width:100%;padding:7px 10px;background:rgba(59,130,246,0.12);
               border:1px solid rgba(59,130,246,0.4);color:#93c5fd;border-radius:6px;font-size:12px;
@@ -147,8 +171,18 @@ export default function Map() {
 
             marker.addTo(map);
             markersRef.current.push(marker);
+            companyMarkersRef.current.set(company.id, marker);
         }
-    }, [companies, commuteCompanyIds, commuteFrom, navigate]);
+    }, [companies, commuteCompanyIds, commuteFrom, navigate, selectedCompanyId]);
+
+    useEffect(() => {
+        if (!selectedCompanyId) return;
+        const marker = companyMarkersRef.current.get(selectedCompanyId);
+        const map = mapInstance.current;
+        if (!marker || !map) return;
+        map.setView(marker.getLatLng(), Math.max(map.getZoom(), 11), { animate: true });
+        marker.openPopup();
+    }, [selectedCompanyId, companies, commuteCompanyIds, commuteFrom]);
 
     // Heatmap layer (leaflet.heat)
     useEffect(() => {
