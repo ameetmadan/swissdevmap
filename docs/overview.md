@@ -29,7 +29,7 @@ The backend is a Node.js/TypeScript HTTP server responsible for:
   - `routes/companies.ts` — serves company records
   - `routes/commute.ts` — computes or retrieves commute information
   - `routes/heatmap.ts` — provides aggregated geographic data for heatmap rendering
-- **API key authentication** — The `middleware/apiKey.ts` middleware (`requireApiKey`) gates protected endpoints.
+- **Public API access** — Frontend data routes are public and rate-limited. The `middleware/apiKey.ts` middleware protects administrative operations such as manual scraper triggers; API keys must stay server-side.
 - **Data ingestion** — A scraper (`scrapers/jobsch.ts`) fetches job listings from jobs.ch. Supporting scripts handle database seeding (`db/seed.ts`), API key generation (`scripts/generate-api-key.ts`), and company website validation (`scripts/check-websites.ts`).
 
 ### Frontend

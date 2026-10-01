@@ -10,6 +10,7 @@ import heatmapRouter from './routes/heatmap';
 import commuteRouter from './routes/commute';
 import { scrapeJobsCh } from './scrapers/jobsch';
 import { requireApiKey } from './middleware/apiKey';
+import { publicApiLimiter } from './middleware/rateLimit';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -23,9 +24,10 @@ app.get('/health', (_req, res) => {
 });
 
 // ─── Core API Routes (protected by API key) ────────────────────────────────────
-app.use('/api/companies', requireApiKey, companiesRouter);
-app.use('/api/heatmap', requireApiKey, heatmapRouter);
-app.use('/api/commute', requireApiKey, commuteRouter);
+app.use('/api', publicApiLimiter);
+app.use('/api/companies', companiesRouter);
+app.use('/api/heatmap', heatmapRouter);
+app.use('/api/commute', commuteRouter);
 
 // ─── Manual Scraper Triggers (protected by API key) ────────────────────────────
 app.post('/api/scrape/jobsch', requireApiKey, async (_req, res) => {
