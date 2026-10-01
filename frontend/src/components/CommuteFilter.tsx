@@ -52,6 +52,7 @@ export default function CommuteFilter() {
                 <input
                     id="commute-city-input"
                     className="commute-input"
+                    aria-label="Commute starting city"
                     placeholder="From city (e.g. Zürich)"
                     value={localCity}
                     onChange={(e) => setLocalCity(e.target.value)}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useMapStore } from '../store/mapStore';
 import CommuteFilter from './CommuteFilter';
 import CompanyForm from './CompanyForm';
@@ -40,6 +40,9 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen, onOpen, onClose }: SidebarProps) {
     const [isFormOpen, setIsFormOpen] = useState(false);
+    const peekButtonRef = useRef<HTMLButtonElement>(null);
+    const panelRef = useRef<HTMLElement>(null);
+    const wasOpenRef = useRef(isOpen);
     const {
         companies, selectedTags, selectedTypes, heatmapActive, heatmapTech,
         toggleTag, toggleType, setHeatmapActive, setHeatmapTech,
@@ -48,26 +51,55 @@ export default function Sidebar({ isOpen, onOpen, onClose }: SidebarProps) {
     const tagCount = [...new Set(companies.flatMap((c) => c.tags.map((t) => t.tag)))].length;
     const cityCount = [...new Set(companies.map((c) => c.city))].length;
 
+    useEffect(() => {
+        if (isOpen && !wasOpenRef.current) {
+            panelRef.current?.querySelector<HTMLElement>(
+                '.sidebar-content button:not([disabled]), .sidebar-content input:not([disabled]), .sidebar-content select:not([disabled]), .sidebar-content [tabindex="0"]',
+            )?.focus();
+        } else if (!isOpen && wasOpenRef.current) {
+            peekButtonRef.current?.focus();
+        }
+        wasOpenRef.current = isOpen;
+    }, [isOpen]);
+
+    useEffect(() => {
+        if (!isOpen) return;
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') onClose();
+        };
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [isOpen, onClose]);
+
     return (
-        <aside className={`sidebar${isOpen ? ' sidebar--open' : ''}`}>
+        <aside
+            ref={panelRef}
+            className={`sidebar${isOpen ? ' sidebar--open' : ''}`}
+            role={isOpen ? 'dialog' : undefined}
+            aria-modal={isOpen ? true : undefined}
+            aria-label="Map filters"
+        >
 
             {/* ── Mobile peek bar ────────────────────────────────────────── */}
             {/* Always visible at the bottom on mobile; tap to expand */}
-            <div
+            <button
+                ref={peekButtonRef}
+                type="button"
                 className="sidebar-peek"
                 onClick={() => isOpen ? onClose() : onOpen()}
-                role="button"
                 aria-label={isOpen ? 'Collapse filters' : 'Expand filters'}
+                aria-expanded={isOpen}
+                aria-controls="sidebar-filter-panel"
             >
-                <div className="sidebar-handle" />
-                <div className="sidebar-peek-content">
-                    <div className="sidebar-peek-left">
+                <span className="sidebar-handle" />
+                <span className="sidebar-peek-content">
+                    <span className="sidebar-peek-left">
                         <span className="sidebar-peek-icon">🗺️</span>
                         <span className="sidebar-peek-label">SwissDevMap</span>
                         {selectedTags.length > 0 && (
                             <span className="sidebar-peek-badge">{selectedTags.length} filters</span>
                         )}
-                    </div>
+                    </span>
                     <svg
                         className={`sidebar-peek-chevron${isOpen ? ' sidebar-peek-chevron--open' : ''}`}
                         width="18" height="18" viewBox="0 0 24 24" fill="none"
@@ -75,11 +107,11 @@ export default function Sidebar({ isOpen, onOpen, onClose }: SidebarProps) {
                     >
                         <polyline points="18 15 12 9 6 15" />
                     </svg>
-                </div>
-            </div>
+                </span>
+            </button>
 
             {/* ── Sidebar content (scrolls) ────────────────────────────── */}
-            <div className="sidebar-content">
+            <div className="sidebar-content" id="sidebar-filter-panel" role="region" aria-label="Filter controls">
                 {/* Header */}
                 <div className="sidebar-header">
                     <div className="logo">

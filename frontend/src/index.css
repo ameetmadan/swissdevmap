@@ -188,6 +188,13 @@ body {
   flex-shrink: 0;
   user-select: none;
   -webkit-user-select: none;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  text-align: left;
+  font: inherit;
 }
 
 .sidebar-peek-content {
@@ -856,6 +863,9 @@ option {
   backdrop-filter: blur(2px);
   -webkit-backdrop-filter: blur(2px);
   animation: fadeIn 0.2s ease;
+  padding: 0;
+  border: 0;
+  cursor: pointer;
 }
 
 @keyframes fadeIn {
