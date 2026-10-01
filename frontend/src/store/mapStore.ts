@@ -21,6 +21,7 @@ export interface MapState {
     commuteFrom: string;
     commuteMinutes: number;
     commuteCompanyIds: string[];
+    selectedCompanyId: string | null;
     loading: boolean;
     commuteLoading: boolean;
     commute429: boolean;
@@ -34,6 +35,7 @@ export interface MapState {
     setCommuteFrom: (city: string) => void;
     setCommuteMinutes: (min: number) => void;
     setCommuteCompanyIds: (ids: string[]) => void;
+    setSelectedCompanyId: (id: string | null) => void;
     setLoading: (loading: boolean) => void;
     setCommuteLoading: (loading: boolean) => void;
     setCommute429: (is429: boolean) => void;
@@ -48,6 +50,7 @@ export const useMapStore = create<MapState>((set) => ({
     commuteFrom: '',
     commuteMinutes: 30,
     commuteCompanyIds: [],
+    selectedCompanyId: null,
     loading: false,
     commuteLoading: false,
     commute429: false,
@@ -71,6 +74,7 @@ export const useMapStore = create<MapState>((set) => ({
     setCommuteFrom: (commuteFrom) => set({ commuteFrom }),
     setCommuteMinutes: (commuteMinutes) => set({ commuteMinutes }),
     setCommuteCompanyIds: (commuteCompanyIds) => set({ commuteCompanyIds }),
+    setSelectedCompanyId: (selectedCompanyId) => set({ selectedCompanyId }),
     setLoading: (loading) => set({ loading }),
     setCommuteLoading: (commuteLoading) => set({ commuteLoading }),
     setCommute429: (commute429) => set({ commute429 }),
