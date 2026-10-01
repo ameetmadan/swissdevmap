@@ -293,6 +293,72 @@ body {
   margin-bottom: 12px;
 }
 
+.company-results-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.company-results-heading .section-label {
+  margin-bottom: 0;
+}
+
+.company-results-count {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.company-results-list {
+  list-style: none;
+  display: grid;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.company-result {
+  display: grid;
+  width: 100%;
+  gap: 2px;
+  padding: 9px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.025);
+  color: var(--text-primary);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.company-result:hover,
+.company-result:focus-visible,
+.company-result--selected {
+  outline: none;
+  border-color: var(--accent-blue);
+  background: rgba(59, 130, 246, 0.13);
+}
+
+.company-result:focus-visible {
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.35);
+}
+
+.company-result-name {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.company-result-meta,
+.company-result-tags {
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.company-results-empty {
+  margin-top: 10px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
 /* ── Tag Grid ────────────────────────────────────────────────────────────── */
 .tag-grid {
   display: flex;

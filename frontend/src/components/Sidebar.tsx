@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useMapStore } from '../store/mapStore';
 import CommuteFilter from './CommuteFilter';
 import CompanyForm from './CompanyForm';
+import { useNavigate } from 'react-router-dom';
 
 const TAGS_BY_CATEGORY: Array<{ category: string; label: string; tags: string[] }> = [
     {
@@ -40,10 +41,16 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen, onOpen, onClose }: SidebarProps) {
     const [isFormOpen, setIsFormOpen] = useState(false);
+    const navigate = useNavigate();
     const {
         companies, selectedTags, selectedTypes, heatmapActive, heatmapTech,
+        commuteFrom, commuteCompanyIds, selectedCompanyId, setSelectedCompanyId,
         toggleTag, toggleType, setHeatmapActive, setHeatmapTech,
     } = useMapStore();
+
+    const visibleCompanies = companies.filter((company) =>
+        !commuteFrom || commuteCompanyIds.includes(company.id)
+    );
 
     const tagCount = [...new Set(companies.flatMap((c) => c.tags.map((t) => t.tag)))].length;
     const cityCount = [...new Set(companies.map((c) => c.city))].length;
@@ -123,6 +130,38 @@ export default function Sidebar({ isOpen, onOpen, onClose }: SidebarProps) {
                         </div>
                     </div>
                 </div>
+
+                <section className="sidebar-section company-results" aria-labelledby="company-results-title">
+                    <div className="company-results-heading">
+                        <div className="section-label" id="company-results-title">Companies</div>
+                        <span className="company-results-count" aria-live="polite">{visibleCompanies.length}</span>
+                    </div>
+                    {visibleCompanies.length ? (
+                        <ul className="company-results-list" aria-label="Matching companies">
+                            {visibleCompanies.map((company) => (
+                                <li key={company.id}>
+                                    <button
+                                        type="button"
+                                        className={`company-result${selectedCompanyId === company.id ? ' company-result--selected' : ''}`}
+                                        aria-current={selectedCompanyId === company.id ? 'true' : undefined}
+                                        aria-label={`${company.name}, ${company.city}${company.type ? `, ${company.type}` : ''}. Open company profile and show map marker`}
+                                        onClick={() => {
+                                            setSelectedCompanyId(company.id);
+                                            navigate(`/company/${company.id}`);
+                                            if (window.matchMedia('(max-width: 768px)').matches) onClose();
+                                        }}
+                                    >
+                                        <span className="company-result-name">{company.name}</span>
+                                        <span className="company-result-meta">{company.city}{company.type ? ` · ${company.type}` : ''}</span>
+                                        <span className="company-result-tags">{company.tags.slice(0, 3).map(({ tag }) => tag).join(' · ')}</span>
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p className="company-results-empty">No companies match these filters.</p>
+                    )}
+                </section>
 
                 {/* Commute Filter */}
                 <CommuteFilter />
