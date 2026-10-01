@@ -21,6 +21,19 @@ const CATEGORY_COLORS: Record<string, string> = {
     devops: '#8b5cf6',
 };
 
+function escapeHtml(value: string | null | undefined): string {
+    return (value ?? '').replace(/[&<>"']/g, (character) => {
+        const entities: Record<string, string> = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;',
+        };
+        return entities[character];
+    });
+}
+
 function getDominantCategory(tags: Company['tags']): string {
     if (!tags || tags.length === 0) return 'backend';
     const counts: Record<string, number> = {};
@@ -121,14 +134,14 @@ export default function Map() {
                     `<span style="display:inline-block;padding:2px 8px;margin:2px;border-radius:20px;font-size:10px;font-weight:500;
                         background:${CATEGORY_COLORS[t.category] || '#4a5568'}33;
                         color:${CATEGORY_COLORS[t.category] || '#8a9ab5'};
-                        border:1px solid ${CATEGORY_COLORS[t.category] || '#4a5568'}55">${t.tag}</span>`
+                        border:1px solid ${CATEGORY_COLORS[t.category] || '#4a5568'}55">${escapeHtml(t.tag)}</span>`
                 ).join('');
 
             const marker = L.marker([company.lat, company.lng], { icon })
                 .bindPopup(
                     `<div style="font-family:Inter,sans-serif;min-width:200px">
-            <div style="font-size:14px;font-weight:700;color:#e8edf5;margin-bottom:2px">${company.name}</div>
-            <div style="font-size:12px;color:#8a9ab5;margin-bottom:10px">📍 ${company.city}</div>
+            <div style="font-size:14px;font-weight:700;color:#e8edf5;margin-bottom:2px">${escapeHtml(company.name)}</div>
+            <div style="font-size:12px;color:#8a9ab5;margin-bottom:10px">📍 ${escapeHtml(company.city)}</div>
             <div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:10px">${tagHtml}</div>
             <button class="sdm-popup-details-btn" style="width:100%;padding:7px 10px;background:rgba(59,130,246,0.12);
               border:1px solid rgba(59,130,246,0.4);color:#93c5fd;border-radius:6px;font-size:12px;
