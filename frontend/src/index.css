@@ -310,6 +310,12 @@ body {
   margin-bottom: 0;
 }
 
+.company-results-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .company-results-count {
   color: var(--text-secondary);
   font-size: 12px;
@@ -855,7 +861,7 @@ body {
   justify-content: center;
   width: 20px;
   height: 20px;
-  margin: -3px -7px -3px auto;
+  margin: -3px -7px -3px 0;
   padding: 0;
   border: 0;
   border-radius: 50%;

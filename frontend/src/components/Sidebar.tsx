@@ -216,19 +216,21 @@ export default function Sidebar({ isOpen, onOpen, onClose }: SidebarProps) {
                 <section className="sidebar-section company-results" aria-labelledby="company-results-title">
                     <div className="company-results-heading">
                         <div className="section-label" id="company-results-title">Companies</div>
-                        <span className="company-results-count" aria-live="polite">{visibleCompanies.length}</span>
-                        <button
-                            type="button"
-                            className={`company-list-toggle${isCompanyListOpen ? ' company-list-toggle--open' : ''}`}
-                            onClick={() => setIsCompanyListOpen((open) => !open)}
-                            aria-label={isCompanyListOpen ? 'Close company list' : 'Open company list'}
-                            aria-expanded={isCompanyListOpen}
-                            aria-controls="company-results-content"
-                        >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                <path d="m6 9 6 6 6-6" />
-                            </svg>
-                        </button>
+                        <div className="company-results-actions">
+                            <span className="company-results-count" aria-live="polite">{visibleCompanies.length}</span>
+                            <button
+                                type="button"
+                                className={`company-list-toggle${isCompanyListOpen ? ' company-list-toggle--open' : ''}`}
+                                onClick={() => setIsCompanyListOpen((open) => !open)}
+                                aria-label={isCompanyListOpen ? 'Close company list' : 'Open company list'}
+                                aria-expanded={isCompanyListOpen}
+                                aria-controls="company-results-content"
+                            >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                    <path d="m6 9 6 6 6-6" />
+                                </svg>
+                            </button>
+                        </div>
                     </div>
                     <div
                         ref={companyListRef}
