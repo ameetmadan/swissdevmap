@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { companyTitle } from '../lib/pageMeta';
 import { Company } from '../store/mapStore';
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -45,6 +46,10 @@ export default function CompanyDetailModal({ companyId }: { companyId: string })
 
         return () => { cancelled = true; };
     }, [companyId]);
+
+    useEffect(() => {
+        if (company) document.title = companyTitle(company);
+    }, [company]);
 
     useEffect(() => {
         const onKeyDown = (e: KeyboardEvent) => {
