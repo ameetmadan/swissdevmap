@@ -1,8 +1,12 @@
 {
     "routes": [
         {
+            "src": "/sitemap.xml",
+            "dest": "/api/sitemap"
+        },
+        {
             "src": "/company/([^/]+)",
-            "dest": "/api/meta?id=$1"
+            "dest": "/api/meta?ref=$1"
         },
         {
             "src": "/",
