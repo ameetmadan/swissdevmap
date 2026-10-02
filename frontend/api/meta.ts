@@ -46,8 +46,15 @@ export default async function handler(request: Request): Promise<Response> {
     const url = new URL(request.url);
     const apiBase = (process.env.VITE_API_URL ?? '').replace(/\/$/, '');
 
+    // Deployment protection on previews guards the self-fetch too, so pass the caller's credentials on.
+    const templateHeaders = new Headers();
+    for (const name of ['cookie', 'x-vercel-protection-bypass']) {
+        const value = request.headers.get(name);
+        if (value) templateHeaders.set(name, value);
+    }
+
     const [html, meta] = await Promise.all([
-        fetch(`${url.origin}/index.html`).then((res) => res.text()),
+        fetch(`${url.origin}/index.html`, { headers: templateHeaders }).then((res) => res.text()),
         apiBase ? describePage(url, apiBase) : DEFAULT_META,
     ]);
 
