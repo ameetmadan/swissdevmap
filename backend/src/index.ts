@@ -8,6 +8,7 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 import companiesRouter from './routes/companies';
 import heatmapRouter from './routes/heatmap';
 import commuteRouter from './routes/commute';
+import statsRouter from './routes/stats';
 import { scrapeJobsCh } from './scrapers/jobsch';
 import { requireApiKey } from './middleware/apiKey';
 import { publicApiLimiter } from './middleware/rateLimit';
@@ -28,6 +29,7 @@ app.use('/api', publicApiLimiter);
 app.use('/api/companies', companiesRouter);
 app.use('/api/heatmap', heatmapRouter);
 app.use('/api/commute', commuteRouter);
+app.use('/api/stats', statsRouter);
 
 // ─── Manual Scraper Triggers (protected by API key) ────────────────────────────
 app.post('/api/scrape/jobsch', requireApiKey, async (_req, res) => {
