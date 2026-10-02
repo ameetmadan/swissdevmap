@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
 import { companies } from './seed-data.example';
+import { insertCompany } from './insertCompany';
 
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 
@@ -62,13 +63,15 @@ async function seed() {
             await client.query('BEGIN');
 
             for (const company of companies) {
-                const res = await client.query(
-                    `INSERT INTO companies (name, uid, website, city, lat, lng, type)
-           VALUES ($1, $2, $3, $4, $5, $6, $7)
-           RETURNING id`,
-                    [company.name, company.uid ?? null, company.website, company.city, company.lat, company.lng, company.type ?? null]
-                );
-                const companyId: string = res.rows[0].id;
+                const { id: companyId } = await insertCompany(client, {
+                    name: company.name,
+                    uid: company.uid,
+                    website: company.website,
+                    city: company.city,
+                    lat: company.lat,
+                    lng: company.lng,
+                    type: company.type,
+                });
 
                 for (const { tag, category } of company.tags) {
                     await client.query(
