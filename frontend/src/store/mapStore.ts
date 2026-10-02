@@ -14,8 +14,17 @@ export interface Company {
     tags: { tag: string; category: string }[];
 }
 
+export interface MapFocus {
+    lat: number;
+    lng: number;
+    zoom: number;
+}
+
 export interface MapState {
     companies: Company[];
+    /** Unfiltered list that feeds search. null means it must be (re)loaded. */
+    allCompanies: Company[] | null;
+    mapFocus: MapFocus | null;
     selectedTags: string[];
     selectedTypes: string[];
     heatmapActive: boolean;
@@ -30,6 +39,8 @@ export interface MapState {
     commute429: boolean;
 
     setCompanies: (companies: Company[]) => void;
+    setAllCompanies: (companies: Company[] | null) => void;
+    focusMap: (focus: MapFocus) => void;
     toggleTag: (tag: string) => void;
     toggleType: (type: string) => void;
     clearFilters: () => void;
@@ -51,6 +62,8 @@ const initialView = parseView(typeof window === 'undefined' ? '' : window.locati
 
 export const useMapStore = create<MapState>((set) => ({
     companies: [],
+    allCompanies: null,
+    mapFocus: null,
     selectedTags: initialView.tags,
     selectedTypes: initialView.types,
     heatmapActive: initialView.heatmapTech !== null,
@@ -65,6 +78,9 @@ export const useMapStore = create<MapState>((set) => ({
     commute429: false,
 
     setCompanies: (companies) => set({ companies }),
+    setAllCompanies: (allCompanies) => set({ allCompanies }),
+    // A fresh object per call, so asking for the same place twice still moves the map.
+    focusMap: (focus) => set({ mapFocus: { ...focus } }),
     toggleTag: (tag) =>
         set((state) => ({
             selectedTags: state.selectedTags.includes(tag)
