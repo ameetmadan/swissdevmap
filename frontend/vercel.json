@@ -1,5 +1,52 @@
 {
     "rewrites": [
-        { "source": "/((?!api/).*)", "destination": "/index.html" }
+        {
+            "source": "/company/:id",
+            "destination": "/api/meta?id=:id"
+        },
+        {
+            "source": "/",
+            "has": [
+                {
+                    "type": "query",
+                    "key": "tag"
+                }
+            ],
+            "destination": "/api/meta"
+        },
+        {
+            "source": "/",
+            "has": [
+                {
+                    "type": "query",
+                    "key": "type"
+                }
+            ],
+            "destination": "/api/meta"
+        },
+        {
+            "source": "/",
+            "has": [
+                {
+                    "type": "query",
+                    "key": "heatmap"
+                }
+            ],
+            "destination": "/api/meta"
+        },
+        {
+            "source": "/",
+            "has": [
+                {
+                    "type": "query",
+                    "key": "from"
+                }
+            ],
+            "destination": "/api/meta"
+        },
+        {
+            "source": "/((?!api/).*)",
+            "destination": "/index.html"
+        }
     ]
 }
