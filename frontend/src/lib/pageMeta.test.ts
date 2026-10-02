@@ -45,6 +45,12 @@ describe('viewMeta', () => {
         expect(viewMeta(view({ tags: ['Go'] }), null).description).not.toMatch(/\d+ compan/);
     });
 
+    it('describes a heatmap-only view as a heatmap rather than a company match', () => {
+        const meta = viewMeta(view({ heatmapTech: 'Go' }), 231);
+        expect(meta.description).toBe('Heatmap of where Go is used across 231 Swiss tech companies, on the SwissDevMap interactive map.');
+        expect(meta.path).toBe('/?heatmap=Go');
+    });
+
     it('falls back to the default for an unfiltered view', () => {
         expect(viewMeta(EMPTY_VIEW, 100)).toBe(DEFAULT_META);
     });

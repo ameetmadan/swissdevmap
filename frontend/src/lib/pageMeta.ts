@@ -64,6 +64,15 @@ export function viewTitle(view: ViewState): string {
 /** `count` is null when it isn't known, e.g. commute results need a slow SBB lookup. */
 export function viewMeta(view: ViewState, count: number | null): PageMeta {
     if (!isFiltered(view)) return DEFAULT_META;
+    if (view.heatmapTech && !view.tags.length && !view.types.length && !view.commute) {
+        const across = count === null ? 'Swiss tech companies' : `${count} Swiss tech companies`;
+        return {
+            title: viewTitle(view),
+            description: `Heatmap of where ${view.heatmapTech} is used across ${across}, on the SwissDevMap interactive map.`,
+            path: `/${viewKey(view)}`,
+            image: { title: `${view.heatmapTech} across Switzerland`, subtitle: 'Heatmap on SwissDevMap', tags: [view.heatmapTech] },
+        };
+    }
     const subject = viewSubject(view);
     const counted =
         count === null || view.commute
