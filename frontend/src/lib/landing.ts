@@ -6,7 +6,8 @@ import { slugify, tagSlug } from './slug';
 
 /** A page needs at least this many companies; thinner slices would be near-empty indexable pages. */
 export const MIN_COMPANIES = 3;
-const MAX_LISTED_COMPANIES = 60;
+// Above any realistic slice today, so the list matches the "Companies (N)" heading; it only bounds page size.
+const MAX_LISTED_COMPANIES = 200;
 const MAX_RELATED = 6;
 /** A technology only counts as "paired" or "related" once this many companies in the slice use it. */
 const MIN_CO_OCCURRENCE = 2;
