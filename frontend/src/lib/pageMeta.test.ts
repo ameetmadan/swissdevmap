@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
-    companyMeta, DEFAULT_META, injectHeadTags, renderHeadTags, viewMeta, viewTitle,
+    companyMeta, DEFAULT_META, injectPage, renderHeadTags, viewMeta, viewTitle,
 } from './pageMeta';
 import { EMPTY_VIEW, ViewState } from './viewUrl';
 
@@ -70,6 +70,34 @@ describe('companyMeta', () => {
         expect(meta.image.subtitle).toBe('Fintech · Zürich');
     });
 
+    it('links to the slug when there is one and ignores null tags from the API', () => {
+        const meta = companyMeta({ id: 'abc', slug: 'acme-ag-zurich', name: 'Acme AG', tags: [{ tag: null }, { tag: 'Rust' }] });
+        expect(meta.path).toBe('/company/acme-ag-zurich');
+        expect(meta.description).toBe('Acme AG uses Rust. See their full tech stack on SwissDevMap.');
+    });
+
+    it('describes the company as schema.org Organization data', () => {
+        const meta = companyMeta({
+            id: 'abc', name: 'Acme AG', city: 'Zürich', uid: 'CHE-123.456.789', website: 'https://acme.example',
+            tags: [{ tag: 'Rust' }, { tag: 'Go' }],
+        });
+        expect(meta.jsonLd).toEqual({
+            '@context': 'https://schema.org',
+            '@type': 'Organization',
+            name: 'Acme AG',
+            mainEntityOfPage: 'https://swissdevmap.ch/company/abc',
+            url: 'https://acme.example',
+            address: { '@type': 'PostalAddress', addressLocality: 'Zürich', addressCountry: 'CH' },
+            identifier: 'CHE-123.456.789',
+            knowsAbout: ['Rust', 'Go'],
+        });
+    });
+
+    it('leaves out a website that is not http(s)', () => {
+        const meta = companyMeta({ id: 'a', name: 'X', website: 'javascript:alert(1)', tags: [] });
+        expect(meta.jsonLd).not.toHaveProperty('url');
+    });
+
     it('copes with a company that has no tags or city', () => {
         const meta = companyMeta({ id: 'x', name: 'Bare GmbH', tags: [] });
         expect(meta.description).toBe('Bare GmbH is listed. See their full tech stack on SwissDevMap.');
@@ -77,7 +105,7 @@ describe('companyMeta', () => {
     });
 });
 
-describe('renderHeadTags / injectHeadTags', () => {
+describe('renderHeadTags / injectPage', () => {
     const template = [
         '<html><head>',
         '  <title>Old</title>',
@@ -94,8 +122,28 @@ describe('renderHeadTags / injectHeadTags', () => {
         expect(html).toContain('&#34;&#62;&#60;script&#62;alert(1)&#60;/script&#62;');
     });
 
+    it('cannot be broken out of the JSON-LD script block by a hostile name', () => {
+        const html = renderHeadTags(companyMeta({ id: '1', name: '</script><script>alert(1)</script>', tags: [] }));
+        const block = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)?.[1] ?? '';
+        expect(block).not.toContain('<');
+        expect(JSON.parse(block).name).toBe('</script><script>alert(1)</script>');
+        expect(html.match(/<script/g)).toHaveLength(1);
+    });
+
+    it('fills #root with readable company content and escapes it', () => {
+        const page = '<head></head><body><div id="root"></div></body>';
+        const out = injectPage(page, companyMeta({ id: '1', name: 'Acme <b>', city: 'Zürich', tags: [{ tag: 'Rust' }] }));
+        expect(out).toContain('<div id="root"><main class="visually-hidden"><h1>Acme &#60;b&#62;</h1>');
+        expect(out).toContain('<li>Rust</li>');
+    });
+
+    it('leaves #root empty for pages without a body', () => {
+        const page = '<head></head><body><div id="root"></div></body>';
+        expect(injectPage(page, DEFAULT_META)).toContain('<div id="root"></div>');
+    });
+
     it('replaces existing SEO tags and keeps everything else', () => {
-        const out = injectHeadTags(template, companyMeta({ id: '1', name: 'Acme', tags: [] }));
+        const out = injectPage(template, companyMeta({ id: '1', name: 'Acme', tags: [] }));
         expect(out.match(/<title>/g)).toHaveLength(1);
         expect(out).not.toContain('Old');
         expect(out).not.toContain('content="old"');
