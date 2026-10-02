@@ -4,9 +4,12 @@ import * as Sentry from '@sentry/react';
 import Map from './components/Map';
 import Sidebar from './components/Sidebar';
 import CompanyDetailModal from './components/CompanyDetailModal';
+import ShareButton from './components/ShareButton';
 import { usePageTitle } from './hooks/usePageTitle';
+import { viewTitle } from './lib/pageMeta';
+import { viewKey } from './lib/viewUrl';
 import { useViewUrlSync } from './hooks/useViewUrlSync';
-import { useMapStore } from './store/mapStore';
+import { selectView, useMapStore } from './store/mapStore';
 import { Analytics } from '@vercel/analytics/react';
 
 const COMMUTE_MESSAGES = [
@@ -25,6 +28,7 @@ function AppInner() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [commuteMsgIdx, setCommuteMsgIdx] = useState(0);
     const companyRouteMatch = useMatch('/company/:id');
+    const hasView = useMapStore((state) => viewKey(selectView(state)) !== '');
     useViewUrlSync();
     usePageTitle();
 
@@ -62,6 +66,19 @@ function AppInner() {
                         {commuteCompanyIds.length}
                         <span className="badge-text-hide"> in commute</span>
                     </div>
+                )}
+                {hasView && (
+                    <ShareButton
+                        surface="view"
+                        className="share-button"
+                        getPayload={() => {
+                            const view = selectView(useMapStore.getState());
+                            const title = viewTitle(view);
+                            return { url: `${window.location.origin}/${viewKey(view)}`, title, text: title };
+                        }}
+                    >
+                        Share view
+                    </ShareButton>
                 )}
                 {(selectedTags.length > 0 || selectedTypes.length > 0) && (
                     <div className="active-filters" role="group" aria-label="Active filters">
