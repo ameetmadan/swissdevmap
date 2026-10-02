@@ -4,6 +4,7 @@ import * as Sentry from '@sentry/react';
 import Map from './components/Map';
 import Sidebar from './components/Sidebar';
 import CompanyDetailModal from './components/CompanyDetailModal';
+import { useViewUrlSync } from './hooks/useViewUrlSync';
 import { useMapStore } from './store/mapStore';
 import { Analytics } from '@vercel/analytics/react';
 
@@ -23,6 +24,7 @@ function AppInner() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [commuteMsgIdx, setCommuteMsgIdx] = useState(0);
     const companyRouteMatch = useMatch('/company/:id');
+    useViewUrlSync();
 
     useEffect(() => {
         if (!commuteLoading) {

@@ -21,7 +21,7 @@ export default function CompanyDetailModal({ companyId }: { companyId: string })
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
-    const close = () => navigate('/');
+    const close = () => navigate({ pathname: '/', search: window.location.search });
 
     useEffect(() => {
         let cancelled = false;
