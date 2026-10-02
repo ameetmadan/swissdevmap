@@ -1,11 +1,11 @@
 import type { Company } from '../store/mapStore';
 
 export type SearchOption =
-    | { kind: 'company'; id: string; label: string; detail: string }
+    | { kind: 'company'; id: string; slug?: string; label: string; detail: string }
     | { kind: 'technology'; tag: string; label: string; detail: string }
     | { kind: 'city'; city: string; label: string; detail: string; lat: number; lng: number };
 
-interface CompanyEntry { id: string; name: string; city: string; key: string }
+interface CompanyEntry { id: string; slug?: string; name: string; city: string; key: string }
 interface TechEntry { tag: string; key: string; count: number }
 interface CityEntry { city: string; key: string; count: number; lat: number; lng: number }
 
@@ -36,7 +36,7 @@ export function buildIndex(companies: Company[]): SearchIndex {
     }
 
     return {
-        companies: companies.map((c) => ({ id: c.id, name: c.name, city: c.city, key: normalize(c.name) })),
+        companies: companies.map((c) => ({ id: c.id, slug: c.slug, name: c.name, city: c.city, key: normalize(c.name) })),
         technologies: [...techCounts].map(([tag, count]) => ({ tag, key: normalize(tag), count })),
         cities: [...cityStats].map(([city, s]) => ({
             city, key: normalize(city), count: s.count, lat: s.lat / s.count, lng: s.lng / s.count,
@@ -78,7 +78,7 @@ export function search(index: SearchIndex, rawQuery: string, limitPerGroup = 5):
 
     return [
         ...topMatches(index.companies, query, limitPerGroup, byName).map((c): SearchOption => ({
-            kind: 'company', id: c.id, label: c.name, detail: c.city,
+            kind: 'company', id: c.id, slug: c.slug, label: c.name, detail: c.city,
         })),
         ...topMatches(index.technologies, query, limitPerGroup, byCount).map((t): SearchOption => ({
             kind: 'technology', tag: t.tag, label: t.tag, detail: companyCount(t.count),

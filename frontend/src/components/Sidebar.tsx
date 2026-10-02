@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { companyPath } from '../lib/paths';
 import { COMPANY_TYPES, HEATMAP_GROUPS, TAGS_BY_CATEGORY } from '../lib/filterOptions';
 import { useMapStore } from '../store/mapStore';
 import CommuteFilter from './CommuteFilter';
@@ -228,7 +229,7 @@ export default function Sidebar({ isOpen, onOpen, onClose }: SidebarProps) {
                                                 aria-label={`${company.name}, ${company.city}${company.type ? `, ${company.type}` : ''}. Open company profile and show map marker`}
                                                 onClick={() => {
                                                     setSelectedCompanyId(company.id);
-                                                    navigate({ pathname: `/company/${company.id}`, search: window.location.search });
+                                                    navigate({ pathname: companyPath(company), search: window.location.search });
                                                     if (window.matchMedia('(max-width: 768px)').matches) onClose();
                                                 }}
                                             >

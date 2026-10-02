@@ -161,7 +161,7 @@ function AppInner() {
 
             {/* Company detail modal — driven by the /company/:id route, rendered over the map */}
             {companyRouteMatch?.params.id && (
-                <CompanyDetailModal companyId={companyRouteMatch.params.id} />
+                <CompanyDetailModal companyRef={companyRouteMatch.params.id} />
             )}
 
             {/* Vercel Analytics */}

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import ShareButton from './ShareButton';
 import { companyTitle } from '../lib/pageMeta';
+import { companyPath } from '../lib/paths';
 import { Company } from '../store/mapStore';
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -17,7 +18,8 @@ interface CompanyDetail extends Company {
     created_at?: string;
 }
 
-export default function CompanyDetailModal({ companyId }: { companyId: string }) {
+// `companyRef` is the slug from the URL, or a company id on links created before slugs existed.
+export default function CompanyDetailModal({ companyRef }: { companyRef: string }) {
     const navigate = useNavigate();
     const [company, setCompany] = useState<CompanyDetail | null>(null);
     const [loading, setLoading] = useState(true);
@@ -31,7 +33,7 @@ export default function CompanyDetailModal({ companyId }: { companyId: string })
         setError('');
         setCompany(null);
 
-        axios.get(`/api/companies/${companyId}`)
+        axios.get(`/api/companies/${companyRef}`)
             .then((res) => {
                 if (!cancelled) setCompany(res.data);
             })
@@ -46,10 +48,16 @@ export default function CompanyDetailModal({ companyId }: { companyId: string })
             });
 
         return () => { cancelled = true; };
-    }, [companyId]);
+    }, [companyRef]);
 
     useEffect(() => {
-        if (company) document.title = companyTitle(company);
+        if (!company) return;
+        document.title = companyTitle(company);
+        // An old id-based link lands on the canonical slug URL without adding a history entry.
+        if (company.slug && companyRef !== company.slug) {
+            navigate({ pathname: companyPath(company), search: window.location.search }, { replace: true });
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [company]);
 
     useEffect(() => {
@@ -83,7 +91,7 @@ export default function CompanyDetailModal({ companyId }: { companyId: string })
                         surface="company"
                         className="detail-share"
                         getPayload={() => ({
-                            url: `${window.location.origin}/company/${company.id}`,
+                            url: `${window.location.origin}${companyPath(company)}`,
                             title: companyTitle(company),
                             text: `${company.name}'s tech stack on SwissDevMap`,
                         })}

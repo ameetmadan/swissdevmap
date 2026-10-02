@@ -6,6 +6,7 @@ export interface Company {
     id: string;
     name: string;
     uid?: string;
+    slug?: string;
     website: string;
     city: string;
     lat: number;
