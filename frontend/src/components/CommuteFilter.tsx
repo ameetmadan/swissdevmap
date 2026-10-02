@@ -1,48 +1,63 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { COMMUTE_MINUTE_OPTIONS } from '../lib/filterOptions';
 import { useMapStore } from '../store/mapStore';
 
 export default function CommuteFilter() {
     const {
-        commuteFrom, commuteMinutes, commuteLoading,
-        setCommuteFrom, setCommuteCompanyIds, setCommuteLoading, setCommute429,
+        commuteFrom, commuteAppliedMinutes, commuteMinutes, commuteLoading,
+        applyCommute, clearCommute, setCommuteMinutes,
+        setCommuteCompanyIds, setCommuteLoading, setCommute429,
     } = useMapStore();
     const [status, setStatus] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
     const [localCity, setLocalCity] = useState(commuteFrom);
 
-    const handleFilter = async () => {
-        if (!localCity.trim()) return;
+    // Follows the applied origin so URL-driven changes (Back, shared link) show up in the input.
+    useEffect(() => setLocalCity(commuteFrom), [commuteFrom]);
+
+    // The applied origin and duration drive the request, whether they came from the Filter button
+    // or from the URL. The sidebar always mounts this component, so a shared link runs it once.
+    useEffect(() => {
+        if (!commuteFrom) {
+            setCommuteLoading(false);
+            setStatus(null);
+            return;
+        }
+        const controller = new AbortController();
         setCommuteLoading(true);
         setCommute429(false);
         setStatus(null);
-        setCommuteFrom(localCity);
 
-        try {
-            const res = await axios.get('/api/commute', {
-                params: { from: localCity, minutes: commuteMinutes },
+        axios.get('/api/commute', {
+            params: { from: commuteFrom, minutes: commuteAppliedMinutes },
+            signal: controller.signal,
+        })
+            .then((res) => {
+                const ids: string[] = res.data.companies.map((c: { id: string }) => c.id);
+                setCommuteCompanyIds(ids);
+                setStatus({
+                    type: 'success',
+                    msg: `${ids.length} companies within ${commuteAppliedMinutes} min from ${commuteFrom}`,
+                });
+            })
+            .catch((err) => {
+                if (controller.signal.aborted) return;
+                if (axios.isAxiosError(err) && err.response?.status === 429) {
+                    setCommute429(true);
+                } else {
+                    setStatus({ type: 'error', msg: 'Could not reach SBB API — check connection' });
+                }
+            })
+            .finally(() => {
+                if (!controller.signal.aborted) setCommuteLoading(false);
             });
-            const ids: string[] = res.data.companies.map((c: { id: string }) => c.id);
-            setCommuteCompanyIds(ids);
-            setStatus({
-                type: 'success',
-                msg: `${ids.length} companies within ${commuteMinutes} min from ${localCity}`,
-            });
-        } catch (err) {
-            if (axios.isAxiosError(err) && err.response?.status === 429) {
-                setCommute429(true);
-            } else {
-                setStatus({ type: 'error', msg: 'Could not reach SBB API — check connection' });
-            }
-        } finally {
-            setCommuteLoading(false);
-        }
-    };
 
-    const handleClear = () => {
-        setCommuteCompanyIds([]);
-        setLocalCity('');
-        setCommuteFrom('');
-        setStatus(null);
+        return () => controller.abort();
+    }, [commuteFrom, commuteAppliedMinutes, setCommuteCompanyIds, setCommuteLoading, setCommute429]);
+
+    const handleFilter = () => {
+        if (!localCity.trim()) return;
+        applyCommute(localCity, commuteMinutes);
     };
 
     return (
@@ -65,10 +80,10 @@ export default function CommuteFilter() {
                     className="tech-select"
                     style={{ marginTop: 0, flex: 1 }}
                     value={commuteMinutes}
-                    onChange={(e) => useMapStore.getState().setCommuteMinutes(Number(e.target.value))}
+                    onChange={(e) => setCommuteMinutes(Number(e.target.value))}
                     id="commute-minutes-select"
                 >
-                    {[15, 20, 30, 45, 60].map((m) => (
+                    {COMMUTE_MINUTE_OPTIONS.map((m) => (
                         <option key={m} value={m}>{m} min</option>
                     ))}
                 </select>
@@ -80,8 +95,8 @@ export default function CommuteFilter() {
                 >
                     {commuteLoading ? '⏳' : 'Filter'}
                 </button>
-                {status && (
-                    <button className="btn-ghost" onClick={handleClear} id="commute-clear-btn">Clear</button>
+                {commuteFrom && (
+                    <button className="btn-ghost" onClick={clearCommute} id="commute-clear-btn">Clear</button>
                 )}
             </div>
             {status && (

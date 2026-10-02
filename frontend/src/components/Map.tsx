@@ -166,7 +166,7 @@ export default function Map() {
                 .on('popupopen', (e) => {
                     const el = e.popup.getElement();
                     const btn = el?.querySelector('.sdm-popup-details-btn');
-                    btn?.addEventListener('click', () => navigate(`/company/${company.id}`));
+                    btn?.addEventListener('click', () => navigate({ pathname: `/company/${company.id}`, search: window.location.search }));
                 });
 
             marker.addTo(map);

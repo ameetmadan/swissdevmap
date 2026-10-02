@@ -1,31 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { COMPANY_TYPES, HEATMAP_GROUPS, TAGS_BY_CATEGORY } from '../lib/filterOptions';
 import { useMapStore } from '../store/mapStore';
 import CommuteFilter from './CommuteFilter';
 import CompanyForm from './CompanyForm';
 import { useNavigate } from 'react-router-dom';
-
-const TAGS_BY_CATEGORY: Array<{ category: string; label: string; tags: string[] }> = [
-    {
-        category: 'frontend',
-        label: 'Frontend',
-        tags: ['React', 'Vue', 'Angular', 'Next.js', 'Svelte', 'TypeScript'],
-    },
-    {
-        category: 'backend',
-        label: 'Backend',
-        tags: ['Node.js', 'Java', 'Python', 'Go', 'Rust', 'Scala', 'C#', 'C++', 'Kotlin', 'PostgreSQL'],
-    },
-    {
-        category: 'cloud',
-        label: 'Cloud',
-        tags: ['AWS', 'Azure', 'GCP'],
-    },
-    {
-        category: 'devops',
-        label: 'DevOps',
-        tags: ['Kubernetes', 'Docker', 'Terraform', 'Kafka'],
-    },
-];
 
 const CLOUD_OPTIONS = [
     { id: 'AWS', label: 'AWS', cls: 'aws' },
@@ -250,7 +228,7 @@ export default function Sidebar({ isOpen, onOpen, onClose }: SidebarProps) {
                                                 aria-label={`${company.name}, ${company.city}${company.type ? `, ${company.type}` : ''}. Open company profile and show map marker`}
                                                 onClick={() => {
                                                     setSelectedCompanyId(company.id);
-                                                    navigate(`/company/${company.id}`);
+                                                    navigate({ pathname: `/company/${company.id}`, search: window.location.search });
                                                     if (window.matchMedia('(max-width: 768px)').matches) onClose();
                                                 }}
                                             >
@@ -294,21 +272,13 @@ export default function Sidebar({ isOpen, onOpen, onClose }: SidebarProps) {
                         onChange={(e) => setHeatmapTech(e.target.value)}
                         id="heatmap-tech-select"
                     >
-                        <optgroup label="Frontend">
-                            {['React', 'Vue', 'Angular', 'Next.js', 'TypeScript'].map((t) => (
-                                <option key={t} value={t}>{t}</option>
-                            ))}
-                        </optgroup>
-                        <optgroup label="Backend">
-                            {['Java', 'Python', 'Go', 'Rust', 'Node.js', 'Scala', 'C#'].map((t) => (
-                                <option key={t} value={t}>{t}</option>
-                            ))}
-                        </optgroup>
-                        <optgroup label="Cloud">
-                            {['AWS', 'Azure', 'GCP'].map((t) => (
-                                <option key={t} value={t}>{t}</option>
-                            ))}
-                        </optgroup>
+                        {HEATMAP_GROUPS.map(({ label, techs }) => (
+                            <optgroup key={label} label={label}>
+                                {techs.map((t) => (
+                                    <option key={t} value={t}>{t}</option>
+                                ))}
+                            </optgroup>
+                        ))}
                     </select>
 
                     <div style={{ marginTop: 12 }}>
@@ -335,7 +305,7 @@ export default function Sidebar({ isOpen, onOpen, onClose }: SidebarProps) {
                 <div className="sidebar-section">
                     <div className="section-label">Company Type</div>
                     <div className="tag-grid">
-                        {['Enterprise', 'Fintech', 'Consulting', 'E-Commerce', 'Industrial'].map((type) => (
+                        {COMPANY_TYPES.map((type) => (
                             <button
                                 key={type}
                                 className={`tag-chip ${selectedTypes.includes(type) ? 'active' : ''}`}
