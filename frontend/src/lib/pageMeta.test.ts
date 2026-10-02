@@ -137,9 +137,11 @@ describe('renderHeadTags / injectPage', () => {
         expect(out).toContain('<li>Rust</li>');
     });
 
-    it('leaves #root empty for pages without a body', () => {
-        const page = '<head></head><body><div id="root"></div></body>';
-        expect(injectPage(page, DEFAULT_META)).toContain('<div id="root"></div>');
+    it('replaces whatever #root already holds, such as the static default content', () => {
+        const page = '<head></head><body><div id="root"><main>old</main></div></body>';
+        const out = injectPage(page, companyMeta({ id: '1', name: 'Acme', tags: [] }));
+        expect(out).not.toContain('old');
+        expect(out).toContain('<h1>Acme</h1>');
     });
 
     it('replaces existing SEO tags and keeps everything else', () => {
@@ -154,6 +156,7 @@ describe('renderHeadTags / injectPage', () => {
 
     it('keeps the static defaults in index.html in step with DEFAULT_META', () => {
         const indexHtml = readFileSync(new URL('../../index.html', import.meta.url), 'utf8');
+        expect(indexHtml).toContain(`<div id="root">${DEFAULT_META.bodyHtml}</div>`);
         for (const line of renderHeadTags(DEFAULT_META).split('\n')) {
             expect(indexHtml).toContain(line.trim());
         }
