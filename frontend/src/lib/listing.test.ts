@@ -3,9 +3,9 @@ import { badgeSnippets, BADGE_URL, correctionUrl, listingUrl } from './listing';
 
 describe('badgeSnippets', () => {
     it('links the badge to the listing', () => {
-        const { html, markdown } = badgeSnippets('https://swissdevmap.ch/company/acme-ag-zurich');
-        expect(html).toBe(`<a href="https://swissdevmap.ch/company/acme-ag-zurich"><img src="${BADGE_URL}" alt="Listed on SwissDevMap" width="192" height="28"></a>`);
-        expect(markdown).toBe(`[![Listed on SwissDevMap](${BADGE_URL})](https://swissdevmap.ch/company/acme-ag-zurich)`);
+        const { html, markdown } = badgeSnippets('https://www.swissdevmap.ch/company/acme-ag-zurich');
+        expect(html).toBe(`<a href="https://www.swissdevmap.ch/company/acme-ag-zurich"><img src="${BADGE_URL}" alt="Listed on SwissDevMap" width="192" height="28"></a>`);
+        expect(markdown).toBe(`[![Listed on SwissDevMap](${BADGE_URL})](https://www.swissdevmap.ch/company/acme-ag-zurich)`);
     });
 
     it('does not let a crafted URL break out of the href attribute', () => {
@@ -20,13 +20,13 @@ describe('badgeSnippets', () => {
 
 describe('listingUrl', () => {
     it('is the production URL, slug first', () => {
-        expect(listingUrl({ id: 'abc', slug: 'acme-ag-zurich' })).toBe('https://swissdevmap.ch/company/acme-ag-zurich');
-        expect(listingUrl({ id: 'abc' })).toBe('https://swissdevmap.ch/company/abc');
+        expect(listingUrl({ id: 'abc', slug: 'acme-ag-zurich' })).toBe('https://www.swissdevmap.ch/company/acme-ag-zurich');
+        expect(listingUrl({ id: 'abc' })).toBe('https://www.swissdevmap.ch/company/abc');
     });
 });
 
 describe('correctionUrl', () => {
-    const url = new URL(correctionUrl({ id: 'abc-123', name: 'Acme & Söhne' }, 'https://swissdevmap.ch/company/acme'));
+    const url = new URL(correctionUrl({ id: 'abc-123', name: 'Acme & Söhne' }, 'https://www.swissdevmap.ch/company/acme'));
 
     it('opens a new GitHub issue with a descriptive title', () => {
         expect(`${url.origin}${url.pathname}`).toBe('https://github.com/ameetmadan/swissdevmap/issues/new');
@@ -36,7 +36,7 @@ describe('correctionUrl', () => {
     it('carries the company id and page but nothing personal', () => {
         const body = url.searchParams.get('body') ?? '';
         expect(body).toContain('Company ID: abc-123');
-        expect(body).toContain('Page: https://swissdevmap.ch/company/acme');
+        expect(body).toContain('Page: https://www.swissdevmap.ch/company/acme');
         expect(body).not.toMatch(/@|email|phone/i);
     });
 });
