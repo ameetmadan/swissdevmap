@@ -6,6 +6,7 @@ import Sidebar from './components/Sidebar';
 import AboutDialog from './components/AboutDialog';
 import CompanyDetailModal from './components/CompanyDetailModal';
 import EmptyResults from './components/EmptyResults';
+import ExportImageDialog from './components/ExportImageDialog';
 import OnboardingCard from './components/OnboardingCard';
 import LandingPage from './components/LandingPage';
 import { parseLandingPath } from './lib/landing';
@@ -33,6 +34,7 @@ function MapApp() {
     } = useMapStore();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [aboutOpen, setAboutOpen] = useState(false);
+    const [exportOpen, setExportOpen] = useState(false);
     const [commuteMsgIdx, setCommuteMsgIdx] = useState(0);
     const companyRouteMatch = useMatch('/company/:id');
     const hasView = useMapStore((state) => viewKey(selectView(state)) !== '');
@@ -93,6 +95,16 @@ function MapApp() {
                         Share view
                     </ShareButton>
                 )}
+                {hasView && (
+                    <button type="button" className="share-button" onClick={() => setExportOpen(true)}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                            strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                            <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" />
+                            <path d="M21 15l-5-5L5 21" />
+                        </svg>
+                        <span>Export image</span>
+                    </button>
+                )}
                 {(selectedTags.length > 0 || selectedTypes.length > 0) && (
                     <div className="active-filters" role="group" aria-label="Active filters">
                         <div className="active-filter-chips">
@@ -129,6 +141,7 @@ function MapApp() {
             {!companyRouteMatch && <OnboardingCard onOpenAbout={() => setAboutOpen(true)} />}
 
             {aboutOpen && <AboutDialog onClose={() => setAboutOpen(false)} />}
+            {exportOpen && <ExportImageDialog onClose={() => setExportOpen(false)} />}
 
             {/* Loading overlay */}
             {loading && (
