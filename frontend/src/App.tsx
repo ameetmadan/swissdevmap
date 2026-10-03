@@ -3,13 +3,16 @@ import { useLocation, useMatch } from 'react-router-dom';
 import * as Sentry from '@sentry/react';
 import Map from './components/Map';
 import Sidebar from './components/Sidebar';
+import AboutDialog from './components/AboutDialog';
 import CompanyDetailModal from './components/CompanyDetailModal';
+import EmptyResults from './components/EmptyResults';
+import OnboardingCard from './components/OnboardingCard';
 import LandingPage from './components/LandingPage';
 import { parseLandingPath } from './lib/landing';
 import SearchBox from './components/SearchBox';
 import ShareButton from './components/ShareButton';
 import { usePageTitle } from './hooks/usePageTitle';
-import { viewTitle } from './lib/pageMeta';
+import { MAP_HEADING, viewTitle } from './lib/pageMeta';
 import { viewKey } from './lib/viewUrl';
 import { useViewUrlSync } from './hooks/useViewUrlSync';
 import { selectView, useMapStore } from './store/mapStore';
@@ -25,13 +28,18 @@ const COMMUTE_MESSAGES = [
 function MapApp() {
     const {
         loading, companies, heatmapActive, heatmapTech,
-        commuteCompanyIds, commuteLoading, commute429, setCommute429,
+        commuteFrom, commuteCompanyIds, commuteLoading, commute429, setCommute429,
         selectedTags, selectedTypes, toggleTag, toggleType, clearFilters,
     } = useMapStore();
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [aboutOpen, setAboutOpen] = useState(false);
     const [commuteMsgIdx, setCommuteMsgIdx] = useState(0);
     const companyRouteMatch = useMatch('/company/:id');
     const hasView = useMapStore((state) => viewKey(selectView(state)) !== '');
+    const companiesLoaded = useMapStore((state) => state.companiesLoaded);
+    const visibleCount = companies.filter((c) => !commuteFrom || commuteCompanyIds.includes(c.id)).length;
+    // A failed or still-running commute lookup hides every marker, which isn't "no matches".
+    const showEmpty = companiesLoaded && !loading && !commuteLoading && !commute429 && hasView && visibleCount === 0;
     useViewUrlSync();
     usePageTitle();
 
@@ -48,6 +56,7 @@ function MapApp() {
 
     return (
         <div className="app-shell">
+            <h1 className="visually-hidden">{MAP_HEADING}</h1>
             {/* Map fills 100% of the screen always */}
             <Map />
 
@@ -115,6 +124,12 @@ function MapApp() {
                 )}
             </div>
 
+            {showEmpty && <EmptyResults />}
+
+            {!companyRouteMatch && <OnboardingCard onOpenAbout={() => setAboutOpen(true)} />}
+
+            {aboutOpen && <AboutDialog onClose={() => setAboutOpen(false)} />}
+
             {/* Loading overlay */}
             {loading && (
                 <div className="loading-overlay">
@@ -146,6 +161,7 @@ function MapApp() {
 
             {/* Sidebar: fixed overlay on desktop, bottom sheet on mobile */}
             <Sidebar
+                onOpenAbout={() => setAboutOpen(true)}
                 isOpen={sidebarOpen}
                 onOpen={() => setSidebarOpen(true)}
                 onClose={() => setSidebarOpen(false)}

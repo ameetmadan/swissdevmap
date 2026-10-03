@@ -23,6 +23,8 @@ export interface MapFocus {
 
 export interface MapState {
     companies: Company[];
+    /** False until the first company response arrives, so empty states don't flash on load. */
+    companiesLoaded: boolean;
     /** Unfiltered list that feeds search. null means it must be (re)loaded. */
     allCompanies: Company[] | null;
     mapFocus: MapFocus | null;
@@ -63,6 +65,7 @@ const initialView = parseView(typeof window === 'undefined' ? '' : window.locati
 
 export const useMapStore = create<MapState>((set) => ({
     companies: [],
+    companiesLoaded: false,
     allCompanies: null,
     mapFocus: null,
     selectedTags: initialView.tags,
@@ -78,7 +81,7 @@ export const useMapStore = create<MapState>((set) => ({
     commuteLoading: false,
     commute429: false,
 
-    setCompanies: (companies) => set({ companies }),
+    setCompanies: (companies) => set({ companies, companiesLoaded: true }),
     setAllCompanies: (allCompanies) => set({ allCompanies }),
     // A fresh object per call, so asking for the same place twice still moves the map.
     focusMap: (focus) => set({ mapFocus: { ...focus } }),

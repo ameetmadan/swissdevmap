@@ -13,12 +13,13 @@ const CLOUD_OPTIONS = [
 ];
 
 interface SidebarProps {
+    onOpenAbout: () => void;
     isOpen: boolean;
     onOpen: () => void;
     onClose: () => void;
 }
 
-export default function Sidebar({ isOpen, onOpen, onClose }: SidebarProps) {
+export default function Sidebar({ isOpen, onOpen, onClose, onOpenAbout }: SidebarProps) {
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [isCompanyListOpen, setIsCompanyListOpen] = useState(true);
     const [isMobile, setIsMobile] = useState(
@@ -362,6 +363,13 @@ export default function Sidebar({ isOpen, onOpen, onClose }: SidebarProps) {
                             <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Within commute radius</span>
                         </div>
                     </div>
+                </div>
+
+                {/* About */}
+                <div className="sidebar-section">
+                    <button type="button" className="sidebar-about-link" onClick={onOpenAbout}>
+                        About this data
+                    </button>
                 </div>
 
                 {/* Add Company */}
