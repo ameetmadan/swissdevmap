@@ -37,3 +37,14 @@ export async function shareLink(payload: SharePayload, env: ShareEnv = browserEn
         return 'failed';
     }
 }
+
+/** Copy-only counterpart to shareLink, for snippets that should never open a share sheet. */
+export async function copyText(text: string, env: Pick<ShareEnv, 'writeText'> = browserEnv()): Promise<'copied' | 'failed'> {
+    if (!env.writeText) return 'failed';
+    try {
+        await env.writeText(text);
+        return 'copied';
+    } catch {
+        return 'failed';
+    }
+}
