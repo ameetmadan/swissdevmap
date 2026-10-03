@@ -1540,7 +1540,7 @@ option {
   margin-bottom: 14px;
 }
 
-.about-overlay {
+.dialog-overlay {
   position: fixed;
   inset: 0;
   z-index: 2100;
@@ -1553,7 +1553,7 @@ option {
   -webkit-backdrop-filter: blur(4px);
 }
 
-.about-panel {
+.dialog-panel {
   position: relative;
   width: 100%;
   max-width: 460px;
@@ -1568,13 +1568,13 @@ option {
   line-height: 1.55;
 }
 
-.about-panel h2 {
+.dialog-panel h2 {
   font-size: 18px;
   margin-bottom: 8px;
   padding-right: 28px;
 }
 
-.about-panel h3 {
+.dialog-panel h3 {
   margin: 18px 0 6px;
   font-size: 11px;
   font-weight: 600;
@@ -1583,16 +1583,16 @@ option {
   color: var(--text-secondary);
 }
 
-.about-panel ul {
+.dialog-panel ul {
   margin: 0;
   padding-left: 18px;
 }
 
-.about-panel li + li {
+.dialog-panel li + li {
   margin-top: 6px;
 }
 
-.about-panel a {
+.dialog-panel a {
   color: #93c5fd;
 }
 
@@ -1600,7 +1600,7 @@ option {
   color: var(--text-secondary);
 }
 
-.about-close {
+.dialog-close {
   position: absolute;
   top: 14px;
   right: 14px;
@@ -1615,7 +1615,7 @@ option {
   cursor: pointer;
 }
 
-.about-close:hover {
+.dialog-close:hover {
   color: var(--text-primary);
   background: var(--bg-hover);
 }
@@ -1638,4 +1638,34 @@ option {
     left: 50%;
     width: calc(100vw - 32px);
   }
+}
+
+.dialog-panel--wide {
+  max-width: 720px;
+}
+
+.export-preview {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.export-note {
+  margin-top: 12px;
+  color: var(--text-secondary);
+}
+
+.export-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.export-actions .btn-primary {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
 }

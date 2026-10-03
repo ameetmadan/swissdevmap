@@ -40,9 +40,9 @@ export default function AboutDialog({ onClose }: { onClose: () => void }) {
     }, [onClose]);
 
     return createPortal(
-        <div className="about-overlay" onClick={(event) => event.target === event.currentTarget && onClose()}>
-            <div className="about-panel" role="dialog" aria-modal="true" aria-labelledby="about-title">
-                <button ref={closeRef} type="button" className="about-close" onClick={onClose} aria-label="Close">×</button>
+        <div className="dialog-overlay" onClick={(event) => event.target === event.currentTarget && onClose()}>
+            <div className="dialog-panel" role="dialog" aria-modal="true" aria-labelledby="about-title">
+                <button ref={closeRef} type="button" className="dialog-close" onClick={onClose} aria-label="Close">×</button>
                 <h2 id="about-title">About this data</h2>
 
                 {stats && (
