@@ -4,6 +4,7 @@ import * as Sentry from '@sentry/react';
 import Map from './components/Map';
 import Sidebar from './components/Sidebar';
 import CompanyDetailModal from './components/CompanyDetailModal';
+import SearchBox from './components/SearchBox';
 import ShareButton from './components/ShareButton';
 import { usePageTitle } from './hooks/usePageTitle';
 import { viewTitle } from './lib/pageMeta';
@@ -50,6 +51,7 @@ function AppInner() {
 
             {/* Topbar badges — always visible over the map */}
             <div className="map-topbar">
+                <SearchBox />
                 <div className="map-badge">
                     <span className="dot dot-blue" />
                     {companies.length} companies

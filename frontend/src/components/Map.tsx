@@ -73,7 +73,7 @@ export default function Map() {
         companies, heatmapActive, heatmapTech, commuteCompanyIds, commuteFrom,
         setCompanies, setLoading,
         selectedTags, selectedTypes,
-        selectedCompanyId,
+        selectedCompanyId, mapFocus,
     } = useMapStore();
 
     // Fetch companies whenever selectedTags or selectedTypes change
@@ -183,6 +183,10 @@ export default function Map() {
         map.setView(marker.getLatLng(), Math.max(map.getZoom(), 11), { animate: true });
         marker.openPopup();
     }, [selectedCompanyId, companies, commuteCompanyIds, commuteFrom]);
+
+    useEffect(() => {
+        if (mapFocus) mapInstance.current?.flyTo([mapFocus.lat, mapFocus.lng], mapFocus.zoom);
+    }, [mapFocus]);
 
     // Heatmap layer (leaflet.heat)
     useEffect(() => {

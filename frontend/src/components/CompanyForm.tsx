@@ -13,9 +13,9 @@ const PREDEFINED_TAGS = [
     'React', 'Vue', 'Angular', 'Svelte', 'Node.js', 'Python', 'Go', 'Rust', 'Java', 'C#', 'AWS', 'Azure', 'GCP', 'Kubernetes', 'Docker'
 ];
 
-export default function CompanyForm({ onClose }: { onClose: () => void }) {
+export default function CompanyForm({ onClose, initialName = '' }: { onClose: () => void; initialName?: string }) {
     const [formData, setFormData] = useState({
-        name: '',
+        name: initialName,
         website: '',
         city: '',
         lat: '',
@@ -27,7 +27,7 @@ export default function CompanyForm({ onClose }: { onClose: () => void }) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
-    const { setCompanies, selectedTags } = useMapStore();
+    const { setCompanies, setAllCompanies, selectedTags } = useMapStore();
 
     const handleLookupCity = async () => {
         if (!formData.city) return;
@@ -87,6 +87,7 @@ export default function CompanyForm({ onClose }: { onClose: () => void }) {
             const params = selectedTags.length > 0 ? { tag: selectedTags[0] } : {};
             const res = await axios.get('/api/companies', { params });
             setCompanies(res.data);
+            setAllCompanies(null);
 
             onClose();
         } catch (e) {
