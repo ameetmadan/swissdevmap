@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import ListingBadge from './ListingBadge';
 import ShareButton from './ShareButton';
 import { companyTitle } from '../lib/pageMeta';
+import { correctionUrl, listingUrl } from '../lib/listing';
 import { companyPath } from '../lib/paths';
 import { Company } from '../store/mapStore';
 
@@ -129,7 +131,8 @@ export default function CompanyDetailModal({ companyRef }: { companyRef: string 
                                 className="detail-website"
                                 href={company.website}
                                 target="_blank"
-                                rel="noopener noreferrer"
+                                // Submitted by visitors, so we don't vouch for it in search rankings.
+                                rel="noopener noreferrer nofollow ugc"
                             >
                                 🔗 {company.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
                             </a>
@@ -155,6 +158,17 @@ export default function CompanyDetailModal({ companyRef }: { companyRef: string 
                         <div className="detail-section detail-section--last">
                             <div className="section-label">Location</div>
                             <div className="detail-coords">{company.lat.toFixed(5)}, {company.lng.toFixed(5)}</div>
+                        </div>
+
+                        <div className="detail-owner">
+                            <a
+                                href={correctionUrl(company, listingUrl(company))}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                Is this your company? Suggest a correction
+                            </a>
+                            <ListingBadge listingUrl={listingUrl(company)} />
                         </div>
                     </>
                 )}

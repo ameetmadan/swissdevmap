@@ -1,7 +1,12 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
+import { listingUrl } from '../lib/listing';
+import { companyPath } from '../lib/paths';
 import { useMapStore } from '../store/mapStore';
+import ListingBadge from './ListingBadge';
+import ShareButton from './ShareButton';
 
 interface Tag {
     tag: string;
@@ -26,6 +31,9 @@ export default function CompanyForm({ onClose, initialName = '' }: { onClose: ()
     const [tagCategory, setTagCategory] = useState('frontend');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+
+    const [created, setCreated] = useState<{ id: string; slug?: string; name: string } | null>(null);
+    const navigate = useNavigate();
 
     const { setCompanies, setAllCompanies, selectedTags } = useMapStore();
 
@@ -76,7 +84,7 @@ export default function CompanyForm({ onClose, initialName = '' }: { onClose: ()
 
         setLoading(true);
         try {
-            await axios.post('/api/companies', {
+            const saved = await axios.post('/api/companies', {
                 ...formData,
                 lat: parseFloat(formData.lat),
                 lng: parseFloat(formData.lng),
@@ -89,7 +97,7 @@ export default function CompanyForm({ onClose, initialName = '' }: { onClose: ()
             setCompanies(res.data);
             setAllCompanies(null);
 
-            onClose();
+            setCreated({ id: saved.data.id, slug: saved.data.slug ?? undefined, name: saved.data.name });
         } catch (e) {
             console.error(e);
             setError('Failed to save company.');
@@ -98,14 +106,50 @@ export default function CompanyForm({ onClose, initialName = '' }: { onClose: ()
         }
     };
 
+    const shareUrl = created ? listingUrl(created) : '';
+
+    const addAnother = () => {
+        setCreated(null);
+        setFormData({ name: '', website: '', city: '', lat: '', lng: '' });
+        setTags([]);
+        setTagInput('');
+        setError('');
+    };
+
+    const viewCompany = () => {
+        if (!created) return;
+        navigate({ pathname: companyPath(created), search: window.location.search });
+        onClose();
+    };
+
     const modalContent = (
         <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
             <div className="modal-content">
                 <div className="modal-header">
-                    <h3>Add New Company</h3>
+                    <h3>{created ? 'Company added' : 'Add New Company'}</h3>
                     <button className="close-btn" onClick={onClose}>×</button>
                 </div>
 
+                {created ? (
+                    <div className="form-success" role="status">
+                        <p><strong>{created.name}</strong> is now on the map.</p>
+                        <p className="form-success-url">{shareUrl}</p>
+                        <div className="form-actions">
+                            <ShareButton
+                                surface="company"
+                                className="btn-ghost"
+                                getPayload={() => ({
+                                    url: shareUrl,
+                                    title: `${created.name} on SwissDevMap`,
+                                    text: `${created.name} is on SwissDevMap`,
+                                })}
+                            />
+                            <button type="button" onClick={viewCompany} className="btn-primary">View company</button>
+                        </div>
+                        <ListingBadge listingUrl={shareUrl} defaultOpen />
+                        <button type="button" onClick={addAnother} className="btn-text">Add another company</button>
+                    </div>
+                ) : (
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
                         <label>Company Name*</label>
@@ -231,6 +275,7 @@ export default function CompanyForm({ onClose, initialName = '' }: { onClose: ()
                         </button>
                     </div>
                 </form>
+                )}
             </div>
 
             <style>{`

@@ -1669,3 +1669,83 @@ option {
   align-items: center;
   text-decoration: none;
 }
+
+/* ── Contribution loop: success state, badge snippets, correction link ───── */
+.form-success p {
+  margin-bottom: 8px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.form-success strong {
+  color: var(--text-primary);
+}
+
+.form-success-url {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  word-break: break-all;
+  color: #93c5fd;
+}
+
+.form-success .form-actions {
+  justify-content: flex-start;
+  margin: 12px 0;
+}
+
+.listing-badge {
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.listing-badge summary {
+  cursor: pointer;
+  color: #93c5fd;
+}
+
+.listing-badge-preview {
+  display: block;
+  margin: 10px 0;
+}
+
+.copy-snippet {
+  margin-bottom: 10px;
+}
+
+.copy-snippet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.copy-snippet-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.copy-snippet-text {
+  width: 100%;
+  resize: none;
+  padding: 8px;
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font: 11px/1.5 'JetBrains Mono', monospace;
+}
+
+.detail-owner {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+}
+
+.detail-owner > a {
+  color: #93c5fd;
+}

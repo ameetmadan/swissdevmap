@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { shareLink } from './share';
+import { copyText, shareLink } from './share';
 
 const payload = { url: 'https://swissdevmap.ch/?tag=Rust', title: 'Rust', text: 'Rust companies' };
 
@@ -36,5 +36,18 @@ describe('shareLink', () => {
         expect(await shareLink(payload, {})).toBe('failed');
         const writeText = vi.fn().mockRejectedValue(new Error('denied'));
         expect(await shareLink(payload, { writeText })).toBe('failed');
+    });
+});
+
+describe('copyText', () => {
+    it('copies without involving the share sheet', async () => {
+        const writeText = vi.fn().mockResolvedValue(undefined);
+        expect(await copyText('<a href="x">', { writeText })).toBe('copied');
+        expect(writeText).toHaveBeenCalledWith('<a href="x">');
+    });
+
+    it('reports failure when the clipboard is missing or rejects', async () => {
+        expect(await copyText('x', {})).toBe('failed');
+        expect(await copyText('x', { writeText: vi.fn().mockRejectedValue(new Error('denied')) })).toBe('failed');
     });
 });
