@@ -101,3 +101,14 @@ export const useMapStore = create<MapState>((set) => ({
     setCommuteLoading: (commuteLoading) => set({ commuteLoading }),
     setCommute429: (commute429) => set({ commute429 }),
 }));
+
+export function selectView(state: MapState): ViewState {
+    return {
+        tags: state.selectedTags,
+        types: state.selectedTypes,
+        heatmapTech: state.heatmapActive ? state.heatmapTech : null,
+        commute: state.commuteFrom
+            ? { from: state.commuteFrom, minutes: state.commuteAppliedMinutes }
+            : null,
+    };
+}

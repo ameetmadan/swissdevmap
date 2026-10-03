@@ -12,6 +12,7 @@
     "dependencies": {
         "@sentry/react": "^10.41.0",
         "@vercel/analytics": "^1.6.1",
+        "@vercel/og": "0.6.8",
         "axios": "^1.6.8",
         "leaflet": "^1.9.4",
         "leaflet.heat": "^0.2.0",

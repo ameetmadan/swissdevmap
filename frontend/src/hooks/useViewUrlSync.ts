@@ -1,18 +1,7 @@
 import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { applyView, parseView, viewKey, ViewState } from '../lib/viewUrl';
-import { MapState, useMapStore } from '../store/mapStore';
-
-function selectView(state: MapState): ViewState {
-    return {
-        tags: state.selectedTags,
-        types: state.selectedTypes,
-        heatmapTech: state.heatmapActive ? state.heatmapTech : null,
-        commute: state.commuteFrom
-            ? { from: state.commuteFrom, minutes: state.commuteAppliedMinutes }
-            : null,
-    };
-}
+import { applyView, parseView, viewKey } from '../lib/viewUrl';
+import { selectView, useMapStore } from '../store/mapStore';
 
 // Keeps the query string and the store in step. Store changes replace the URL entry (so a chip
 // toggle never adds history); Back/Forward and pasted URLs flow the other way into the store.

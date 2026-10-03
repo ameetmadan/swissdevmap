@@ -1,5 +1,55 @@
 {
-    "rewrites": [
-        { "source": "/((?!api/).*)", "destination": "/index.html" }
+    "routes": [
+        {
+            "src": "/company/([^/]+)",
+            "dest": "/api/meta?id=$1"
+        },
+        {
+            "src": "/",
+            "has": [
+                {
+                    "type": "query",
+                    "key": "tag"
+                }
+            ],
+            "dest": "/api/meta"
+        },
+        {
+            "src": "/",
+            "has": [
+                {
+                    "type": "query",
+                    "key": "type"
+                }
+            ],
+            "dest": "/api/meta"
+        },
+        {
+            "src": "/",
+            "has": [
+                {
+                    "type": "query",
+                    "key": "heatmap"
+                }
+            ],
+            "dest": "/api/meta"
+        },
+        {
+            "src": "/",
+            "has": [
+                {
+                    "type": "query",
+                    "key": "from"
+                }
+            ],
+            "dest": "/api/meta"
+        },
+        {
+            "handle": "filesystem"
+        },
+        {
+            "src": "/((?!api/).*)",
+            "dest": "/index.html"
+        }
     ]
 }
