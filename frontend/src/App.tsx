@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useMatch } from 'react-router-dom';
+import { useLocation, useMatch } from 'react-router-dom';
 import * as Sentry from '@sentry/react';
 import Map from './components/Map';
 import Sidebar from './components/Sidebar';
 import CompanyDetailModal from './components/CompanyDetailModal';
+import LandingPage from './components/LandingPage';
+import { parseLandingPath } from './lib/landing';
 import SearchBox from './components/SearchBox';
 import ShareButton from './components/ShareButton';
 import { usePageTitle } from './hooks/usePageTitle';
@@ -20,7 +22,7 @@ const COMMUTE_MESSAGES = [
     'This is taking longer than expected, please wait…',
 ];
 
-function AppInner() {
+function MapApp() {
     const {
         loading, companies, heatmapActive, heatmapTech,
         commuteCompanyIds, commuteLoading, commute429, setCommute429,
@@ -168,6 +170,12 @@ function AppInner() {
             <Analytics />
         </div>
     );
+}
+
+// Landing pages are plain content pages; everything else is the map.
+function AppInner() {
+    const landing = parseLandingPath(useLocation().pathname);
+    return landing ? <LandingPage {...landing} /> : <MapApp />;
 }
 
 export default Sentry.withErrorBoundary(AppInner, {

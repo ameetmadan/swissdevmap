@@ -9,6 +9,18 @@
             "dest": "/api/meta?ref=$1"
         },
         {
+            "src": "/tech/([^/]+)/city/([^/]+)",
+            "dest": "/api/landing?tag=$1&city=$2"
+        },
+        {
+            "src": "/tech/([^/]+)",
+            "dest": "/api/landing?tag=$1"
+        },
+        {
+            "src": "/city/([^/]+)",
+            "dest": "/api/landing?city=$1"
+        },
+        {
             "src": "/",
             "has": [
                 {

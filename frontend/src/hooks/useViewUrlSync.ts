@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useLayoutEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { applyView, parseView, viewKey } from '../lib/viewUrl';
 import { selectView, useMapStore } from '../store/mapStore';
@@ -24,7 +24,10 @@ export function useViewUrlSync() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedTags, selectedTypes, heatmapActive, heatmapTech, commuteFrom, commuteAppliedMinutes, navigate]);
 
-    useEffect(() => {
+    // A layout effect so that on mount, and on every URL-driven change, hydration lands before the
+    // effect above runs. That effect reads the store directly, so it then sees the hydrated view
+    // instead of overwriting a freshly arrived `?tag=…` with the store's stale, empty one.
+    useLayoutEffect(() => {
         const fromUrl = parseView(search);
         if (viewKey(fromUrl) !== viewKey(selectView(useMapStore.getState()))) setView(fromUrl);
     }, [search, setView]);
