@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS companies (
   lat         DOUBLE PRECISION NOT NULL,
   lng         DOUBLE PRECISION NOT NULL,
   type        TEXT,                      -- e.g. 'Fintech', 'Consulting', 'Enterprise'
+  slug        TEXT,                      -- URL-safe, unique, assigned once at insert
   created_at  TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -41,6 +42,7 @@ CREATE TABLE IF NOT EXISTS job_postings (
 
 -- Indexes for geo queries and tag lookups
 CREATE INDEX IF NOT EXISTS idx_companies_lat_lng   ON companies(lat, lng);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_companies_slug ON companies(slug);
 CREATE INDEX IF NOT EXISTS idx_tech_tags_tag        ON tech_tags(tag);
 CREATE INDEX IF NOT EXISTS idx_tech_tags_company    ON tech_tags(company_id);
 CREATE INDEX IF NOT EXISTS idx_tech_tags_category   ON tech_tags(category);

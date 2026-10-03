@@ -1,3 +1,4 @@
+import { companyPath } from './paths';
 import { ViewState, viewKey } from './viewUrl';
 
 export const SITE_URL = 'https://swissdevmap.ch';
@@ -9,14 +10,21 @@ export interface PageMeta {
     /** Path plus canonical query string, relative to SITE_URL. */
     path: string;
     image: { title: string; subtitle: string; tags: string[] };
+    /** schema.org data for crawlers. */
+    jsonLd?: Record<string, unknown>;
+    /** Plain HTML placed inside #root for clients that don't run the app. React replaces it on mount. */
+    bodyHtml?: string;
 }
 
 export interface CompanyMetaInput {
     id: string;
+    slug?: string | null;
     name: string;
-    city?: string;
-    type?: string;
-    tags: { tag: string }[];
+    city?: string | null;
+    type?: string | null;
+    website?: string | null;
+    uid?: string | null;
+    tags: { tag: string | null }[];
 }
 
 export const DEFAULT_META: PageMeta = {
@@ -95,21 +103,53 @@ export function companyTitle(company: Pick<CompanyMetaInput, 'name' | 'city'>): 
     return `${company.name}${where} tech stack | ${SITE_NAME}`;
 }
 
+const isHttpUrl = (value?: string | null): value is string => !!value && /^https?:\/\//i.test(value);
+
+function companyJsonLd(company: CompanyMetaInput, tags: string[], url: string): Record<string, unknown> {
+    return {
+        '@context': 'https://schema.org',
+        '@type': 'Organization',
+        name: company.name,
+        mainEntityOfPage: url,
+        ...(isHttpUrl(company.website) && { url: company.website }),
+        ...(company.city && {
+            address: { '@type': 'PostalAddress', addressLocality: company.city, addressCountry: 'CH' },
+        }),
+        ...(company.uid && { identifier: company.uid }),
+        ...(tags.length > 0 && { knowsAbout: tags }),
+    };
+}
+
+function companyBodyHtml(company: CompanyMetaInput, tags: string[]): string {
+    const where = [company.type, company.city].filter(Boolean).join(' · ');
+    return [
+        '<main class="visually-hidden">',
+        `<h1>${escapeHtml(company.name)}</h1>`,
+        where ? `<p>${escapeHtml(where)}</p>` : '',
+        tags.length ? `<h2>Tech stack</h2><ul>${tags.map((tag) => `<li>${escapeHtml(tag)}</li>`).join('')}</ul>` : '',
+        '<p><a href="/">Explore Swiss tech companies on SwissDevMap</a></p>',
+        '</main>',
+    ].join('');
+}
+
 export function companyMeta(company: CompanyMetaInput): PageMeta {
-    const tags = company.tags.map((t) => t.tag);
+    const tags = company.tags.flatMap((t) => (t.tag ? [t.tag] : []));
     const city = company.city ? ` in ${company.city}` : '';
     const stack = tags.length
         ? `uses ${tags.slice(0, MAX_LISTED_TAGS).join(', ')}${tags.length > MAX_LISTED_TAGS ? ' and more' : ''}`
         : 'is listed';
+    const path = companyPath(company);
     return {
-        title: companyTitle(company),
+        title: companyTitle({ name: company.name, city: company.city ?? undefined }),
         description: `${company.name}${city} ${stack}. See their full tech stack on SwissDevMap.`,
-        path: `/company/${company.id}`,
+        path,
         image: {
             title: company.name,
             subtitle: [company.type, company.city].filter(Boolean).join(' · ') || 'Swiss tech company',
             tags,
         },
+        jsonLd: companyJsonLd(company, tags, `${SITE_URL}${path}`),
+        bodyHtml: companyBodyHtml(company, tags),
     };
 }
 
@@ -124,6 +164,11 @@ export function ogImageUrl(image: PageMeta['image']): string {
 }
 
 /** Everything crawlers read from <head>, as one block of HTML. */
+/** `<` is escaped so a company name containing `</script>` can't end the block early. */
+function serializeJsonLd(data: Record<string, unknown>): string {
+    return JSON.stringify(data).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
+}
+
 export function renderHeadTags(meta: PageMeta): string {
     const url = `${SITE_URL}${meta.path}`;
     const image = ogImageUrl(meta.image);
@@ -145,6 +190,7 @@ export function renderHeadTags(meta: PageMeta): string {
         `<meta name="twitter:title" content="${title}" />`,
         `<meta name="twitter:description" content="${description}" />`,
         `<meta name="twitter:image" content="${escapeHtml(image)}" />`,
+        ...(meta.jsonLd ? [`<script type="application/ld+json">${serializeJsonLd(meta.jsonLd)}</script>`] : []),
     ].join('\n  ');
 }
 
@@ -153,10 +199,14 @@ const HEAD_TAG_PATTERNS = [
     /<meta\s+name="description"[^>]*>\s*/i,
     /<link\s+rel="canonical"[^>]*>\s*/i,
     /<meta\s+(?:property="og:|name="twitter:)[^>]*>\s*/gi,
+    /<script type="application\/ld\+json">[\s\S]*?<\/script>\s*/gi,
 ];
 
-/** Swaps the SEO tags in a built index.html for the ones describing `meta`. */
-export function injectHeadTags(html: string, meta: PageMeta): string {
+/** Swaps the SEO tags in a built index.html for the ones describing `meta`, and fills #root if it has a body. */
+export function injectPage(html: string, meta: PageMeta): string {
     const stripped = HEAD_TAG_PATTERNS.reduce((out, pattern) => out.replace(pattern, ''), html);
-    return stripped.replace('</head>', `  ${renderHeadTags(meta)}\n</head>`);
+    const withHead = stripped.replace('</head>', `  ${renderHeadTags(meta)}\n</head>`);
+    return meta.bodyHtml
+        ? withHead.replace('<div id="root"></div>', `<div id="root">${meta.bodyHtml}</div>`)
+        : withHead;
 }

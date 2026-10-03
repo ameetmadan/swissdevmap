@@ -1,6 +1,8 @@
 import { Router, Request, Response } from 'express';
 import { pool } from '../db/pool';
 import { companySubmissionLimiter } from '../middleware/rateLimit';
+import { insertCompany } from '../db/insertCompany';
+import { isUuid, SLUG_RE } from '../lib/slug';
 
 const router = Router();
 
@@ -10,7 +12,7 @@ router.get('/', async (req: Request, res: Response) => {
 
   let query = `
     SELECT
-      c.id, c.name, c.uid, c.website, c.city, c.lat, c.lng, c.type,
+      c.id, c.name, c.uid, c.website, c.city, c.lat, c.lng, c.type, c.slug,
       COALESCE(
         json_agg(
           json_build_object('tag', t.tag, 'category', t.category)
@@ -61,22 +63,29 @@ router.get('/', async (req: Request, res: Response) => {
   }
 });
 
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const MAX_REF_LENGTH = 80;
 
-// GET /api/companies/:id
-router.get('/:id', async (req: Request, res: Response) => {
-  if (!UUID_RE.test(req.params.id)) {
+// GET /api/companies/:ref  (ref is a company id or its slug)
+router.get('/:ref', async (req: Request, res: Response) => {
+  const { ref } = req.params;
+  const byId = isUuid(ref);
+  if (!byId && !(ref.length <= MAX_REF_LENGTH && SLUG_RE.test(ref))) {
     return res.status(404).json({ error: 'Not found' });
   }
 
   try {
     const { rows } = await pool.query(
-      `SELECT c.*, json_agg(json_build_object('tag', t.tag, 'category', t.category)) AS tags
+      `SELECT c.*,
+              COALESCE(
+                json_agg(json_build_object('tag', t.tag, 'category', t.category))
+                  FILTER (WHERE t.tag IS NOT NULL),
+                '[]'
+              ) AS tags
        FROM companies c
        LEFT JOIN tech_tags t ON t.company_id = c.id
-       WHERE c.id = $1
+       WHERE ${byId ? 'c.id' : 'c.slug'} = $1
        GROUP BY c.id`,
-      [req.params.id]
+      [ref]
     );
     if (rows.length === 0) return res.status(404).json({ error: 'Not found' });
     res.json(rows[0]);
@@ -99,14 +108,7 @@ router.post('/', companySubmissionLimiter, async (req: Request, res: Response) =
   try {
     await client.query('BEGIN');
 
-    // Insert company
-    const companyRes = await client.query(
-      `INSERT INTO companies (name, uid, website, city, lat, lng)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING id, name, uid, website, city, lat, lng`,
-      [name, uid || null, website || null, city || null, lat, lng]
-    );
-    const company = companyRes.rows[0];
+    const company = await insertCompany(client, { name, uid, website, city, lat, lng });
 
     // Insert tags if provided
     if (Array.isArray(tags) && tags.length > 0) {
@@ -128,7 +130,12 @@ router.post('/', companySubmissionLimiter, async (req: Request, res: Response) =
     // (Reusing the get-by-id logic effectively, but let's keep it simple and just return what we have + tags)
     // Actually, let's fetch it cleanly to ensure format matches get-by-id
     const { rows } = await client.query(
-      `SELECT c.*, json_agg(json_build_object('tag', t.tag, 'category', t.category)) AS tags
+      `SELECT c.*,
+              COALESCE(
+                json_agg(json_build_object('tag', t.tag, 'category', t.category))
+                  FILTER (WHERE t.tag IS NOT NULL),
+                '[]'
+              ) AS tags
        FROM companies c
        LEFT JOIN tech_tags t ON t.company_id = c.id
        WHERE c.id = $1

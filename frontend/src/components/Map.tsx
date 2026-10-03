@@ -4,6 +4,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet.heat';
 import axios from 'axios';
+import { companyPath } from '../lib/paths';
 import { useMapStore, Company } from '../store/mapStore';
 
 // Fix Leaflet default marker icon path broken by bundlers (use CDN URLs)
@@ -166,7 +167,7 @@ export default function Map() {
                 .on('popupopen', (e) => {
                     const el = e.popup.getElement();
                     const btn = el?.querySelector('.sdm-popup-details-btn');
-                    btn?.addEventListener('click', () => navigate({ pathname: `/company/${company.id}`, search: window.location.search }));
+                    btn?.addEventListener('click', () => navigate({ pathname: companyPath(company), search: window.location.search }));
                 });
 
             marker.addTo(map);

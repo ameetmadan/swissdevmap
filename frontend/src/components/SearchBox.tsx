@@ -2,6 +2,7 @@ import { KeyboardEvent, useEffect, useId, useMemo, useRef, useState } from 'reac
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import CompanyForm from './CompanyForm';
+import { companyPath } from '../lib/paths';
 import { buildIndex, search, SearchOption } from '../lib/search';
 import { applyView, EMPTY_VIEW } from '../lib/viewUrl';
 import { useMapStore } from '../store/mapStore';
@@ -79,7 +80,7 @@ export default function SearchBox() {
                 });
             }
             state.setSelectedCompanyId(option.id);
-            navigate({ pathname: `/company/${option.id}`, search: nextSearch });
+            navigate({ pathname: companyPath(option), search: nextSearch });
         } else if (option.kind === 'technology') {
             if (!state.selectedTags.includes(option.tag)) state.toggleTag(option.tag);
         } else {
