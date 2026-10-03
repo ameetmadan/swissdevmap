@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import ShareButton from './ShareButton';
 import { companyTitle } from '../lib/pageMeta';
 import { Company } from '../store/mapStore';
 
@@ -76,6 +77,18 @@ export default function CompanyDetailModal({ companyId }: { companyId: string })
                         <line x1="6" y1="6" x2="18" y2="18" />
                     </svg>
                 </button>
+
+                {company && (
+                    <ShareButton
+                        surface="company"
+                        className="detail-share"
+                        getPayload={() => ({
+                            url: `${window.location.origin}/company/${company.id}`,
+                            title: companyTitle(company),
+                            text: `${company.name}'s tech stack on SwissDevMap`,
+                        })}
+                    />
+                )}
 
                 {loading && (
                     <div className="detail-state">
@@ -186,6 +199,27 @@ export default function CompanyDetailModal({ companyId }: { companyId: string })
           color: var(--text-primary, #e8edf5);
           background: var(--bg-hover, rgba(255,255,255,0.05));
         }
+        .detail-share {
+          position: absolute;
+          top: 16px;
+          right: 52px;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          min-height: 28px;
+          padding: 4px 10px;
+          background: transparent;
+          border: 1px solid var(--border, rgba(255,255,255,0.08));
+          border-radius: 20px;
+          color: var(--text-secondary, #8a9ab5);
+          font: 500 11px 'Inter', sans-serif;
+          cursor: pointer;
+          transition: color 0.15s, background 0.15s;
+        }
+        .detail-share:hover {
+          color: var(--text-primary, #e8edf5);
+          background: var(--bg-hover, rgba(255,255,255,0.05));
+        }
         .detail-state {
           display: flex;
           flex-direction: column;
@@ -199,6 +233,7 @@ export default function CompanyDetailModal({ companyId }: { companyId: string })
         }
         .detail-error-icon { font-size: 24px; }
         .detail-header { padding-right: 28px; margin-bottom: 16px; }
+        .detail-share ~ .detail-header { padding-top: 28px; }
         .detail-type-badge {
           display: inline-block;
           font-size: 10px;

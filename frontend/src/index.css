@@ -942,6 +942,41 @@ body {
   line-height: 1;
 }
 
+.share-button {
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border: 1px solid var(--border-active);
+  border-radius: 18px;
+  background: var(--bg-glass);
+  color: #93c5fd;
+  font: 500 11px 'Inter', sans-serif;
+  white-space: nowrap;
+  cursor: pointer;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.share-button:hover,
+.share-button:focus-visible {
+  border-color: #93c5fd;
+  color: #dbeafe;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .clear-filters-button {
   border-color: var(--border);
   color: #93c5fd;
