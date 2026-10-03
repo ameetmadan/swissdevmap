@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { copyText, shareLink } from './share';
 
-const payload = { url: 'https://swissdevmap.ch/?tag=Rust', title: 'Rust', text: 'Rust companies' };
+const payload = { url: 'https://www.swissdevmap.ch/?tag=Rust', title: 'Rust', text: 'Rust companies' };
 
 describe('shareLink', () => {
     it('uses the native share sheet when available', async () => {

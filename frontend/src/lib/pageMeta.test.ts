@@ -85,7 +85,7 @@ describe('companyMeta', () => {
             '@context': 'https://schema.org',
             '@type': 'Organization',
             name: 'Acme AG',
-            mainEntityOfPage: 'https://swissdevmap.ch/company/abc',
+            mainEntityOfPage: 'https://www.swissdevmap.ch/company/abc',
             url: 'https://acme.example',
             address: { '@type': 'PostalAddress', addressLocality: 'Zürich', addressCountry: 'CH' },
             identifier: 'CHE-123.456.789',
@@ -150,7 +150,7 @@ describe('renderHeadTags / injectPage', () => {
         expect(out).not.toContain('Old');
         expect(out).not.toContain('content="old"');
         expect(out).toContain('<link rel="stylesheet" href="/a.css" />');
-        expect(out).toContain('property="og:url" content="https://swissdevmap.ch/company/1"');
+        expect(out).toContain('property="og:url" content="https://www.swissdevmap.ch/company/1"');
         expect(out).toContain('name="twitter:card" content="summary_large_image"');
     });
 
