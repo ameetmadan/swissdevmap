@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="28" viewBox="0 0 192 28" role="img" aria-label="Listed on SwissDevMap">
+  <rect width="192" height="28" rx="6" fill="#0d1521"/>
+  <rect x=".5" y=".5" width="191" height="27" rx="5.5" fill="none" stroke="#3b82f6" stroke-opacity=".5"/>
+  <circle cx="16" cy="14" r="8" fill="none" stroke="#3b82f6" stroke-opacity=".6"/>
+  <circle cx="16" cy="14" r="4.5" fill="#10b981"/>
+  <text x="32" y="18.5" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" font-weight="600" fill="#e8edf5">Listed on <tspan fill="#93c5fd">SwissDevMap</tspan></text>
+</svg>

@@ -1,7 +1,7 @@
 import { KeyboardEvent, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import CompanyForm from './CompanyForm';
+import { useAllCompanies } from '../hooks/useAllCompanies';
 import { companyPath } from '../lib/paths';
 import { buildIndex, search, SearchOption } from '../lib/search';
 import { applyView, EMPTY_VIEW } from '../lib/viewUrl';
@@ -32,17 +32,7 @@ export default function SearchBox() {
     const [open, setOpen] = useState(false);
     const [activeIndex, setActiveIndex] = useState(0);
     const [formName, setFormName] = useState<string | null>(null);
-    const allCompanies = useMapStore((state) => state.allCompanies);
-    const setAllCompanies = useMapStore((state) => state.setAllCompanies);
-
-    useEffect(() => {
-        if (allCompanies) return;
-        const controller = new AbortController();
-        axios.get('/api/companies', { signal: controller.signal })
-            .then((res) => setAllCompanies(res.data))
-            .catch(() => { /* search simply stays in its loading state */ });
-        return () => controller.abort();
-    }, [allCompanies, setAllCompanies]);
+    const allCompanies = useAllCompanies();
 
     const index = useMemo(() => (allCompanies ? buildIndex(allCompanies) : null), [allCompanies]);
     const options = useMemo(() => (index ? search(index, query) : []), [index, query]);

@@ -1,7 +1,8 @@
 import { companyPath } from './paths';
 import { ViewState, viewKey } from './viewUrl';
 
-export const SITE_URL = 'https://swissdevmap.ch';
+// The apex domain 307-redirects to www, so www is the address crawlers should treat as canonical.
+export const SITE_URL = 'https://www.swissdevmap.ch';
 export const SITE_NAME = 'SwissDevMap';
 
 export interface PageMeta {
@@ -27,6 +28,12 @@ export interface CompanyMetaInput {
     tags: { tag: string | null }[];
 }
 
+const plainBody = (heading: string, text: string) =>
+    `<main class="visually-hidden"><h1>${escapeHtml(heading)}</h1><p>${escapeHtml(text)}</p></main>`;
+
+/** The map's own heading, for assistive tech and for clients that never run the app. */
+export const MAP_HEADING = 'SwissDevMap: Swiss tech companies and the technologies they use, on a map';
+
 export const DEFAULT_META: PageMeta = {
     title: `${SITE_NAME} — Swiss tech stacks on a map`,
     description:
@@ -37,6 +44,10 @@ export const DEFAULT_META: PageMeta = {
         subtitle: "Which Swiss companies use which tech? Explore Switzerland's tech ecosystem on a map.",
         tags: [],
     },
+    bodyHtml: plainBody(
+        MAP_HEADING,
+        "Explore which Swiss tech companies use which technologies. Filter by stack, company type or commute time on an interactive map of Switzerland's tech ecosystem.",
+    ),
 };
 
 const MAX_LISTED_TAGS = 6;
@@ -79,6 +90,7 @@ export function viewMeta(view: ViewState, count: number | null): PageMeta {
             description: `Heatmap of where ${view.heatmapTech} is used across ${across}, on the SwissDevMap interactive map.`,
             path: `/${viewKey(view)}`,
             image: { title: `${view.heatmapTech} across Switzerland`, subtitle: 'Heatmap on SwissDevMap', tags: [view.heatmapTech] },
+            bodyHtml: plainBody(`${view.heatmapTech} across Switzerland`, `Heatmap of where ${view.heatmapTech} is used across ${across}.`),
         };
     }
     const subject = viewSubject(view);
@@ -95,6 +107,7 @@ export function viewMeta(view: ViewState, count: number | null): PageMeta {
             subtitle: count === null || view.commute ? 'SwissDevMap' : `${count} on SwissDevMap`,
             tags: view.tags,
         },
+        bodyHtml: plainBody(subject, counted),
     };
 }
 
@@ -207,6 +220,6 @@ export function injectPage(html: string, meta: PageMeta): string {
     const stripped = HEAD_TAG_PATTERNS.reduce((out, pattern) => out.replace(pattern, ''), html);
     const withHead = stripped.replace('</head>', `  ${renderHeadTags(meta)}\n</head>`);
     return meta.bodyHtml
-        ? withHead.replace('<div id="root"></div>', `<div id="root">${meta.bodyHtml}</div>`)
+        ? withHead.replace(/<div id="root">[\s\S]*?<\/div>/, `<div id="root">${meta.bodyHtml}</div>`)
         : withHead;
 }

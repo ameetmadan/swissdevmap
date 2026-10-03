@@ -4,6 +4,8 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet.heat';
 import axios from 'axios';
+import { visibleRegion } from '../lib/exportGeometry';
+import { MapSnapshot, registerSnapshotSource, SnapshotImage } from '../lib/mapSnapshot';
 import { companyPath } from '../lib/paths';
 import { useMapStore, Company } from '../store/mapStore';
 
@@ -67,6 +69,8 @@ export default function Map() {
     const mapInstance = useRef<L.Map | null>(null);
     const markersRef = useRef<L.Marker[]>([]);
     const companyMarkersRef = useRef<globalThis.Map<string, L.Marker>>(new globalThis.Map());
+    // Colour and commute state per marker, so an exported image can redraw them without parsing icon HTML.
+    const markerStyleRef = useRef<globalThis.Map<L.Marker, { color: string; inCommuteRange: boolean }>>(new globalThis.Map());
     const heatLayer = useRef<L.Layer | null>(null);
     const navigate = useNavigate();
 
@@ -109,6 +113,8 @@ export default function Map() {
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
             maxZoom: 19,
+            // Without CORS headers on the tile requests, drawing them to a canvas for export would taint it.
+            crossOrigin: true,
         }).addTo(map);
 
         L.control.zoom({ position: 'bottomright' }).addTo(map);
@@ -129,6 +135,7 @@ export default function Map() {
         markersRef.current.forEach((m) => m.remove());
         markersRef.current = [];
         companyMarkersRef.current.clear();
+        markerStyleRef.current.clear();
 
         for (const company of companies) {
             // Apply commute filter: if active, hide companies not in range
@@ -172,6 +179,7 @@ export default function Map() {
 
             marker.addTo(map);
             markersRef.current.push(marker);
+            markerStyleRef.current.set(marker, { color, inCommuteRange: isCommute });
             companyMarkersRef.current.set(company.id, marker);
         }
     }, [companies, commuteCompanyIds, commuteFrom, navigate, selectedCompanyId]);
@@ -184,6 +192,39 @@ export default function Map() {
         map.setView(marker.getLatLng(), Math.max(map.getZoom(), 11), { animate: true });
         marker.openPopup();
     }, [selectedCompanyId, companies, commuteCompanyIds, commuteFrom]);
+
+    // Lets the image exporter read what the visitor currently sees without knowing about Leaflet.
+    useEffect(() => registerSnapshotSource((): MapSnapshot | null => {
+        const map = mapInstance.current;
+        const container = mapRef.current;
+        if (!map || !container) return null;
+
+        const box = container.getBoundingClientRect();
+        const within = (element: Element) => {
+            const r = element.getBoundingClientRect();
+            return { x: r.left - box.left, y: r.top - box.top, width: r.width, height: r.height };
+        };
+        const zoom = Math.round(map.getZoom());
+        const tiles: SnapshotImage[] = [...container.querySelectorAll<HTMLImageElement>('img.leaflet-tile')]
+            // Tiles from the previous zoom level linger during a transition; only the current level is drawn.
+            .filter((img) => img.complete && img.naturalWidth > 0 && Number(img.src.match(/\/(\d+)\/\d+\/\d+\.png/)?.[1]) === zoom)
+            .map((img) => ({ source: img, ...within(img) }));
+        const heatCanvas = container.querySelector<HTMLCanvasElement>('canvas.leaflet-heatmap-layer');
+        const sidebar = document.querySelector('.sidebar');
+
+        return {
+            region: visibleRegion(
+                { x: 0, y: 0, width: box.width, height: box.height },
+                sidebar ? within(sidebar) : null,
+            ),
+            tiles,
+            heat: heatCanvas ? { source: heatCanvas, ...within(heatCanvas) } : null,
+            markers: [...markerStyleRef.current].map(([marker, style]) => {
+                const point = map.latLngToContainerPoint(marker.getLatLng());
+                return { x: point.x, y: point.y, ...style };
+            }),
+        };
+    }), []);
 
     useEffect(() => {
         if (mapFocus) mapInstance.current?.flyTo([mapFocus.lat, mapFocus.lng], mapFocus.zoom);

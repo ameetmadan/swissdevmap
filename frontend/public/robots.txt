@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://swissdevmap.ch/sitemap.xml
+Sitemap: https://www.swissdevmap.ch/sitemap.xml

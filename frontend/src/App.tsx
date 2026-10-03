@@ -1,13 +1,19 @@
 import { useState, useEffect } from 'react';
-import { useMatch } from 'react-router-dom';
+import { useLocation, useMatch } from 'react-router-dom';
 import * as Sentry from '@sentry/react';
 import Map from './components/Map';
 import Sidebar from './components/Sidebar';
+import AboutDialog from './components/AboutDialog';
 import CompanyDetailModal from './components/CompanyDetailModal';
+import EmptyResults from './components/EmptyResults';
+import ExportImageDialog from './components/ExportImageDialog';
+import OnboardingCard from './components/OnboardingCard';
+import LandingPage from './components/LandingPage';
+import { parseLandingPath } from './lib/landing';
 import SearchBox from './components/SearchBox';
 import ShareButton from './components/ShareButton';
 import { usePageTitle } from './hooks/usePageTitle';
-import { viewTitle } from './lib/pageMeta';
+import { MAP_HEADING, viewTitle } from './lib/pageMeta';
 import { viewKey } from './lib/viewUrl';
 import { useViewUrlSync } from './hooks/useViewUrlSync';
 import { selectView, useMapStore } from './store/mapStore';
@@ -20,16 +26,22 @@ const COMMUTE_MESSAGES = [
     'This is taking longer than expected, please wait…',
 ];
 
-function AppInner() {
+function MapApp() {
     const {
         loading, companies, heatmapActive, heatmapTech,
-        commuteCompanyIds, commuteLoading, commute429, setCommute429,
+        commuteFrom, commuteCompanyIds, commuteLoading, commute429, setCommute429,
         selectedTags, selectedTypes, toggleTag, toggleType, clearFilters,
     } = useMapStore();
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [aboutOpen, setAboutOpen] = useState(false);
+    const [exportOpen, setExportOpen] = useState(false);
     const [commuteMsgIdx, setCommuteMsgIdx] = useState(0);
     const companyRouteMatch = useMatch('/company/:id');
     const hasView = useMapStore((state) => viewKey(selectView(state)) !== '');
+    const companiesLoaded = useMapStore((state) => state.companiesLoaded);
+    const visibleCount = companies.filter((c) => !commuteFrom || commuteCompanyIds.includes(c.id)).length;
+    // A failed or still-running commute lookup hides every marker, which isn't "no matches".
+    const showEmpty = companiesLoaded && !loading && !commuteLoading && !commute429 && hasView && visibleCount === 0;
     useViewUrlSync();
     usePageTitle();
 
@@ -46,6 +58,7 @@ function AppInner() {
 
     return (
         <div className="app-shell">
+            <h1 className="visually-hidden">{MAP_HEADING}</h1>
             {/* Map fills 100% of the screen always */}
             <Map />
 
@@ -82,6 +95,16 @@ function AppInner() {
                         Share view
                     </ShareButton>
                 )}
+                {hasView && (
+                    <button type="button" className="share-button" onClick={() => setExportOpen(true)}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                            strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                            <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" />
+                            <path d="M21 15l-5-5L5 21" />
+                        </svg>
+                        <span>Export image</span>
+                    </button>
+                )}
                 {(selectedTags.length > 0 || selectedTypes.length > 0) && (
                     <div className="active-filters" role="group" aria-label="Active filters">
                         <div className="active-filter-chips">
@@ -112,6 +135,13 @@ function AppInner() {
                     </div>
                 )}
             </div>
+
+            {showEmpty && <EmptyResults />}
+
+            {!companyRouteMatch && <OnboardingCard onOpenAbout={() => setAboutOpen(true)} />}
+
+            {aboutOpen && <AboutDialog onClose={() => setAboutOpen(false)} />}
+            {exportOpen && <ExportImageDialog onClose={() => setExportOpen(false)} />}
 
             {/* Loading overlay */}
             {loading && (
@@ -144,6 +174,7 @@ function AppInner() {
 
             {/* Sidebar: fixed overlay on desktop, bottom sheet on mobile */}
             <Sidebar
+                onOpenAbout={() => setAboutOpen(true)}
                 isOpen={sidebarOpen}
                 onOpen={() => setSidebarOpen(true)}
                 onClose={() => setSidebarOpen(false)}
@@ -168,6 +199,12 @@ function AppInner() {
             <Analytics />
         </div>
     );
+}
+
+// Landing pages are plain content pages; everything else is the map.
+function AppInner() {
+    const landing = parseLandingPath(useLocation().pathname);
+    return landing ? <LandingPage {...landing} /> : <MapApp />;
 }
 
 export default Sentry.withErrorBoundary(AppInner, {
