@@ -6,6 +6,9 @@ const router = Router();
 
 const SBB_API = 'https://transport.opendata.ch/v1';
 
+// `from` is forwarded to the SBB API once per destination city, so it must not be arbitrarily large.
+const MAX_CITY_LENGTH = 100;
+
 interface SBBStation {
     name: string;
     coordinate: { x: number; y: number };
@@ -49,9 +52,9 @@ export async function commuteSearch(req: Request, res: Response) {
     const maxMinutes = Number.isFinite(parsedMinutes) ? parsedMinutes : 30;
     console.log(`[Commute] Parsed maxMinutes: ${maxMinutes}`);
 
-    if (typeof from !== 'string' || !from.trim()) {
-        console.warn('[Commute] Missing "from" parameter');
-        return res.status(400).json({ error: '`from` city query param required' });
+    if (typeof from !== 'string' || !from.trim() || from.length > MAX_CITY_LENGTH) {
+        console.warn('[Commute] Missing or oversized "from" parameter');
+        return res.status(400).json({ error: '`from` city query param required (at most 100 characters)' });
     }
 
     const fromCity = from.trim();

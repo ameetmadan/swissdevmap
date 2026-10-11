@@ -29,9 +29,10 @@ describe('commuteSearch', () => {
         expect(sql).toMatch(/city IS NOT NULL AND btrim\(city\) <> ''/);
     });
 
-    it('rejects a missing or non-string origin', async () => {
+    it('rejects a missing, non-string or oversized origin', async () => {
         expect((await search('')).status).toHaveBeenCalledWith(400);
         expect((await search(['Bern', 'Zug'])).status).toHaveBeenCalledWith(400);
+        expect((await search('x'.repeat(101))).status).toHaveBeenCalledWith(400);
     });
 
     it('returns companies in cities within range', async () => {
