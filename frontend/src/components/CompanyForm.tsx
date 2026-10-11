@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
+import { useModalFocus } from '../hooks/useModalFocus';
+import { submitCompany } from '../lib/companies';
 import { listingUrl } from '../lib/listing';
 import { companyPath } from '../lib/paths';
 import { useMapStore } from '../store/mapStore';
@@ -35,7 +37,9 @@ export default function CompanyForm({ onClose, initialName = '' }: { onClose: ()
     const [created, setCreated] = useState<{ id: string; slug?: string; name: string } | null>(null);
     const navigate = useNavigate();
 
-    const { setCompanies, setAllCompanies, selectedTags } = useMapStore();
+    const { setCompanies, setAllCompanies, selectedTags, selectedTypes } = useMapStore();
+    const panelRef = useRef<HTMLDivElement>(null);
+    useModalFocus(panelRef, onClose);
 
     const handleLookupCity = async () => {
         if (!formData.city) return;
@@ -79,25 +83,24 @@ export default function CompanyForm({ onClose, initialName = '' }: { onClose: ()
         e.preventDefault();
         setError('');
 
-        if (!formData.name) return setError('Company Name is required');
+        if (!formData.name.trim()) return setError('Company Name is required');
+        if (!formData.city.trim()) return setError('City is required');
         if (!formData.lat || !formData.lng) return setError('Location (Lat/Lng) is required.');
 
         setLoading(true);
         try {
-            const saved = await axios.post('/api/companies', {
+            const { saved, companies } = await submitCompany({
                 ...formData,
                 lat: parseFloat(formData.lat),
                 lng: parseFloat(formData.lng),
                 tags
-            });
+            }, selectedTags, selectedTypes);
 
-            // Refresh map data
-            const params = selectedTags.length > 0 ? { tag: selectedTags[0] } : {};
-            const res = await axios.get('/api/companies', { params });
-            setCompanies(res.data);
+            // The company is saved from here on; a failed map refresh must not look like a failed save.
+            if (companies) setCompanies(companies);
             setAllCompanies(null);
 
-            setCreated({ id: saved.data.id, slug: saved.data.slug ?? undefined, name: saved.data.name });
+            setCreated({ id: saved.id, slug: saved.slug ?? undefined, name: saved.name });
         } catch (e) {
             console.error(e);
             setError('Failed to save company.');
@@ -124,10 +127,10 @@ export default function CompanyForm({ onClose, initialName = '' }: { onClose: ()
 
     const modalContent = (
         <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
-            <div className="modal-content">
+            <div ref={panelRef} className="modal-content" role="dialog" aria-modal="true" aria-labelledby="company-form-title" tabIndex={-1}>
                 <div className="modal-header">
-                    <h3>{created ? 'Company added' : 'Add New Company'}</h3>
-                    <button className="close-btn" onClick={onClose}>×</button>
+                    <h3 id="company-form-title">{created ? 'Company added' : 'Add New Company'}</h3>
+                    <button className="close-btn" onClick={onClose} aria-label="Close">×</button>
                 </div>
 
                 {created ? (

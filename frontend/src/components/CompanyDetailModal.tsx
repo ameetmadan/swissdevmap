@@ -1,20 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import ListingBadge from './ListingBadge';
 import ShareButton from './ShareButton';
+import { useModalFocus } from '../hooks/useModalFocus';
 import { companyTitle } from '../lib/pageMeta';
 import { correctionUrl, listingUrl } from '../lib/listing';
 import { companyPath } from '../lib/paths';
+import { categoryLabel, groupTagsByCategory } from '../lib/tags';
 import { Company } from '../store/mapStore';
-
-const CATEGORY_LABELS: Record<string, string> = {
-    frontend: 'Frontend',
-    backend: 'Backend',
-    cloud: 'Cloud',
-    devops: 'DevOps',
-};
 
 interface CompanyDetail extends Company {
     created_at?: string;
@@ -62,25 +57,14 @@ export default function CompanyDetailModal({ companyRef }: { companyRef: string 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [company]);
 
-    useEffect(() => {
-        const onKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') close();
-        };
-        window.addEventListener('keydown', onKeyDown);
-        return () => window.removeEventListener('keydown', onKeyDown);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    const panelRef = useRef<HTMLDivElement>(null);
+    useModalFocus(panelRef, close);
 
-    const tagsByCategory = (company?.tags || []).reduce<Record<string, string[]>>((acc, t) => {
-        const cat = t.category || 'other';
-        if (!acc[cat]) acc[cat] = [];
-        acc[cat].push(t.tag);
-        return acc;
-    }, {});
+    const tagsByCategory = groupTagsByCategory(company?.tags || []);
 
     const modalContent = (
         <div className="detail-overlay" onClick={(e) => e.target === e.currentTarget && close()}>
-            <div className="detail-panel" role="dialog" aria-modal="true" aria-label={company?.name || 'Company details'}>
+            <div ref={panelRef} className="detail-panel" role="dialog" aria-modal="true" aria-label={company?.name || 'Company details'} tabIndex={-1}>
                 <button className="detail-close" onClick={close} aria-label="Close">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                         <line x1="18" y1="6" x2="6" y2="18" />
@@ -140,12 +124,12 @@ export default function CompanyDetailModal({ companyRef }: { companyRef: string 
 
                         <div className="detail-section">
                             <div className="section-label">Tech Stack</div>
-                            {Object.keys(tagsByCategory).length === 0 && (
+                            {tagsByCategory.size === 0 && (
                                 <div className="no-tags">No technologies recorded yet</div>
                             )}
-                            {Object.entries(tagsByCategory).map(([cat, tags]) => (
+                            {[...tagsByCategory].map(([cat, tags]) => (
                                 <div key={cat} className="detail-tag-group">
-                                    <div className="detail-tag-group-label">{CATEGORY_LABELS[cat] || cat}</div>
+                                    <div className="detail-tag-group-label">{categoryLabel(cat)}</div>
                                     <div className="tag-grid">
                                         {tags.map((tag) => (
                                             <span key={tag} className={`tag-chip cat-${cat} active`}>{tag}</span>

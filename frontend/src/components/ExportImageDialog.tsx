@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useModalFocus } from '../hooks/useModalFocus';
 import { exportFilename } from '../lib/exportGeometry';
 import { renderExportImage } from '../lib/exportImage';
 import { captureMapSnapshot } from '../lib/mapSnapshot';
@@ -33,7 +34,8 @@ function describeCurrentView() {
 
 export default function ExportImageDialog({ onClose }: { onClose: () => void }) {
     const [state, setState] = useState<State>({ status: 'rendering' });
-    const closeRef = useRef<HTMLButtonElement>(null);
+    const panelRef = useRef<HTMLDivElement>(null);
+    useModalFocus(panelRef, onClose);
 
     useEffect(() => {
         let cancelled = false;
@@ -69,19 +71,6 @@ export default function ExportImageDialog({ onClose }: { onClose: () => void }) 
         };
     }, []);
 
-    useEffect(() => {
-        const opener = document.activeElement as HTMLElement | null;
-        closeRef.current?.focus();
-        const onKeyDown = (event: KeyboardEvent) => {
-            if (event.key === 'Escape') onClose();
-        };
-        window.addEventListener('keydown', onKeyDown);
-        return () => {
-            window.removeEventListener('keydown', onKeyDown);
-            opener?.focus();
-        };
-    }, [onClose]);
-
     const shareFile = async () => {
         if (state.status !== 'ready') return;
         try {
@@ -93,8 +82,8 @@ export default function ExportImageDialog({ onClose }: { onClose: () => void }) 
 
     return createPortal(
         <div className="dialog-overlay" onClick={(event) => event.target === event.currentTarget && onClose()}>
-            <div className="dialog-panel dialog-panel--wide" role="dialog" aria-modal="true" aria-labelledby="export-title">
-                <button ref={closeRef} type="button" className="dialog-close" onClick={onClose} aria-label="Close">×</button>
+            <div ref={panelRef} className="dialog-panel dialog-panel--wide" role="dialog" aria-modal="true" aria-labelledby="export-title" tabIndex={-1}>
+                <button type="button" className="dialog-close" onClick={onClose} aria-label="Close">×</button>
                 <h2 id="export-title">Export image</h2>
 
                 {state.status === 'rendering' && <p role="status" className="export-note">Rendering the map…</p>}

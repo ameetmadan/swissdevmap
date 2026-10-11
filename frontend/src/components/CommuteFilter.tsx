@@ -5,9 +5,9 @@ import { useMapStore } from '../store/mapStore';
 
 export default function CommuteFilter() {
     const {
-        commuteFrom, commuteAppliedMinutes, commuteMinutes, commuteLoading,
+        commuteFrom, commuteAppliedMinutes, commuteMinutes, commuteLoading, commuteRequest,
         applyCommute, clearCommute, setCommuteMinutes,
-        setCommuteCompanyIds, setCommuteLoading, setCommute429,
+        setCommuteCompanyIds, setCommuteLoading, setCommute429, setCommuteFailed,
     } = useMapStore();
     const [status, setStatus] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
     const [localCity, setLocalCity] = useState(commuteFrom);
@@ -17,6 +17,7 @@ export default function CommuteFilter() {
 
     // The applied origin and duration drive the request, whether they came from the Filter button
     // or from the URL. The sidebar always mounts this component, so a shared link runs it once.
+    // Each Filter press bumps commuteRequest, which is what makes retrying unchanged values work.
     useEffect(() => {
         if (!commuteFrom) {
             setCommuteLoading(false);
@@ -26,6 +27,9 @@ export default function CommuteFilter() {
         const controller = new AbortController();
         setCommuteLoading(true);
         setCommute429(false);
+        setCommuteFailed(false);
+        // Results belong to the search that produced them; never show the previous city's under this one.
+        setCommuteCompanyIds([]);
         setStatus(null);
 
         axios.get('/api/commute', {
@@ -45,7 +49,8 @@ export default function CommuteFilter() {
                 if (axios.isAxiosError(err) && err.response?.status === 429) {
                     setCommute429(true);
                 } else {
-                    setStatus({ type: 'error', msg: 'Could not reach SBB API — check connection' });
+                    setCommuteFailed(true);
+                    setStatus({ type: 'error', msg: 'Could not reach SBB API — check connection, then press Filter to retry' });
                 }
             })
             .finally(() => {
@@ -53,7 +58,7 @@ export default function CommuteFilter() {
             });
 
         return () => controller.abort();
-    }, [commuteFrom, commuteAppliedMinutes, setCommuteCompanyIds, setCommuteLoading, setCommute429]);
+    }, [commuteFrom, commuteAppliedMinutes, commuteRequest, setCommuteCompanyIds, setCommuteLoading, setCommute429, setCommuteFailed]);
 
     const handleFilter = () => {
         if (!localCity.trim()) return;

@@ -41,7 +41,7 @@ export function LandingContent({ model }: { model: LandingModel }) {
 }
 
 export default function LandingPage({ tagSlug, citySlug }: { tagSlug?: string; citySlug?: string }) {
-    const companies = useAllCompanies();
+    const { companies, failed, retry } = useAllCompanies();
     const resolution = useMemo(
         () => (companies ? resolveLanding(companies, { tagSlug, citySlug }) : null),
         [companies, tagSlug, citySlug],
@@ -53,6 +53,14 @@ export default function LandingPage({ tagSlug, citySlug }: { tagSlug?: string; c
     }, [resolution]);
 
     if (!resolution) {
+        if (failed) {
+            return (
+                <main className="landing">
+                    <p role="alert">We couldn't load the company list.</p>
+                    <p><button type="button" className="btn-primary" onClick={retry}>Try again</button></p>
+                </main>
+            );
+        }
         return <main className="landing"><p role="status">Loading…</p></main>;
     }
     if (resolution.kind === 'redirect') return <Navigate to={resolution.to} replace />;

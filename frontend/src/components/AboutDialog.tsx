@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
+import { useModalFocus } from '../hooks/useModalFocus';
 
 interface Stats {
     companies: number;
@@ -16,7 +17,8 @@ const formatDate = (iso: string) =>
 
 export default function AboutDialog({ onClose }: { onClose: () => void }) {
     const [stats, setStats] = useState<Stats | null>(null);
-    const closeRef = useRef<HTMLButtonElement>(null);
+    const panelRef = useRef<HTMLDivElement>(null);
+    useModalFocus(panelRef, onClose);
 
     useEffect(() => {
         const controller = new AbortController();
@@ -26,23 +28,10 @@ export default function AboutDialog({ onClose }: { onClose: () => void }) {
         return () => controller.abort();
     }, []);
 
-    useEffect(() => {
-        const opener = document.activeElement as HTMLElement | null;
-        closeRef.current?.focus();
-        const onKeyDown = (event: KeyboardEvent) => {
-            if (event.key === 'Escape') onClose();
-        };
-        window.addEventListener('keydown', onKeyDown);
-        return () => {
-            window.removeEventListener('keydown', onKeyDown);
-            opener?.focus();
-        };
-    }, [onClose]);
-
     return createPortal(
         <div className="dialog-overlay" onClick={(event) => event.target === event.currentTarget && onClose()}>
-            <div className="dialog-panel" role="dialog" aria-modal="true" aria-labelledby="about-title">
-                <button ref={closeRef} type="button" className="dialog-close" onClick={onClose} aria-label="Close">×</button>
+            <div ref={panelRef} className="dialog-panel" role="dialog" aria-modal="true" aria-labelledby="about-title" tabIndex={-1}>
+                <button type="button" className="dialog-close" onClick={onClose} aria-label="Close">×</button>
                 <h2 id="about-title">About this data</h2>
 
                 {stats && (
