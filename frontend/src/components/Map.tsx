@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet.heat';
-import axios from 'axios';
+import { useHeatmapLayer } from '../hooks/useHeatmapLayer';
+import { fetchCompanies } from '../lib/companies';
 import { visibleRegion } from '../lib/exportGeometry';
 import { MapSnapshot, registerSnapshotSource, SnapshotImage } from '../lib/mapSnapshot';
 import { companyPath } from '../lib/paths';
@@ -39,9 +40,10 @@ function escapeHtml(value: string | null | undefined): string {
 
 function getDominantCategory(tags: Company['tags']): string {
     if (!tags || tags.length === 0) return 'backend';
-    const counts: Record<string, number> = {};
-    for (const { category } of tags) counts[category] = (counts[category] || 0) + 1;
-    return Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
+    // A Map, not an object: categories come from user submissions and may be names like "__proto__".
+    const counts = new globalThis.Map<string, number>();
+    for (const { category } of tags) counts.set(category, (counts.get(category) ?? 0) + 1);
+    return [...counts].sort((a, b) => b[1] - a[1])[0][0];
 }
 
 function makeCircleIcon(color: string, isCommute: boolean, isSelected: boolean) {
@@ -71,34 +73,33 @@ export default function Map() {
     const companyMarkersRef = useRef<globalThis.Map<string, L.Marker>>(new globalThis.Map());
     // Colour and commute state per marker, so an exported image can redraw them without parsing icon HTML.
     const markerStyleRef = useRef<globalThis.Map<L.Marker, { color: string; inCommuteRange: boolean }>>(new globalThis.Map());
-    const heatLayer = useRef<L.Layer | null>(null);
     const navigate = useNavigate();
 
     const {
         companies, heatmapActive, heatmapTech, commuteCompanyIds, commuteFrom,
-        setCompanies, setLoading,
-        selectedTags, selectedTypes,
+        setCompanies, failCompanies, setLoading,
+        selectedTags, selectedTypes, companiesReload,
         selectedCompanyId, mapFocus,
     } = useMapStore();
 
-    // Fetch companies whenever selectedTags or selectedTypes change
+    // Fetch companies whenever the filters change, or Retry bumps companiesReload
     useEffect(() => {
         const controller = new AbortController();
         setLoading(true);
-        const params = new URLSearchParams();
-        selectedTags.forEach(t => params.append('tag', t));
-        selectedTypes.forEach(t => params.append('type', t));
-        axios.get('/api/companies', { params, signal: controller.signal })
-            .then((res) => setCompanies(res.data))
+        fetchCompanies(selectedTags, selectedTypes, controller.signal)
+            .then(setCompanies)
             .catch((error) => {
-                if (!controller.signal.aborted) console.error(error);
+                if (controller.signal.aborted) return;
+                console.error(error);
+                // Keeping the previous list would present it as the result of the new filters.
+                failCompanies();
             })
             .finally(() => {
                 if (!controller.signal.aborted) setLoading(false);
             });
 
         return () => controller.abort();
-    }, [selectedTags, selectedTypes, setCompanies, setLoading]);
+    }, [selectedTags, selectedTypes, companiesReload, setCompanies, failCompanies, setLoading]);
 
     // Init Leaflet map once
     useEffect(() => {
@@ -230,46 +231,7 @@ export default function Map() {
         if (mapFocus) mapInstance.current?.flyTo([mapFocus.lat, mapFocus.lng], mapFocus.zoom);
     }, [mapFocus]);
 
-    // Heatmap layer (leaflet.heat)
-    useEffect(() => {
-        const map = mapInstance.current;
-        if (!map) return;
-
-        // Remove existing heat layer
-        if (heatLayer.current) {
-            map.removeLayer(heatLayer.current);
-            heatLayer.current = null;
-        }
-
-        if (!heatmapActive) return;
-
-        axios.get(`/api/heatmap?tech=${encodeURIComponent(heatmapTech)}`)
-            .then((res) => {
-                const features = res.data.features as Array<{
-                    geometry: { coordinates: [number, number] };
-                    properties: { intensity: number };
-                }>;
-
-                const points = features.map((f) => [
-                    f.geometry.coordinates[1], // lat
-                    f.geometry.coordinates[0], // lng
-                    Math.min(f.properties.intensity / 5, 1.0), // normalised intensity
-                ] as [number, number, number]);
-
-                // leaflet.heat attaches itself to L at runtime
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const heatFn = (L as unknown as any).heatLayer;
-                if (typeof heatFn === 'function') {
-                    heatLayer.current = heatFn(points, {
-                        radius: 60,
-                        blur: 30,
-                        maxZoom: 10,
-                        gradient: { 0.2: '#172554', 0.4: '#1d4ed8', 0.6: '#fbbf24', 0.8: '#f97316', 1.0: '#dc2626' },
-                    }).addTo(map);
-                }
-            })
-            .catch(console.error);
-    }, [heatmapActive, heatmapTech]);
+    useHeatmapLayer(mapInstance, heatmapActive, heatmapTech);
 
     return (
         <>

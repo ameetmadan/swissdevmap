@@ -25,6 +25,10 @@ export interface MapState {
     companies: Company[];
     /** False until the first company response arrives, so empty states don't flash on load. */
     companiesLoaded: boolean;
+    /** The last filtered-company request failed; `companies` is cleared so stale results aren't shown. */
+    companiesFailed: boolean;
+    /** Bumped to refetch the filtered companies with unchanged filters (Retry). */
+    companiesReload: number;
     /** Unfiltered list that feeds search. null means it must be (re)loaded. */
     allCompanies: Company[] | null;
     mapFocus: MapFocus | null;
@@ -36,12 +40,17 @@ export interface MapState {
     commuteMinutes: number;
     commuteAppliedMinutes: number;
     commuteCompanyIds: string[];
+    /** Bumped on every Filter press, so repeating the same search runs again (Retry). */
+    commuteRequest: number;
+    commuteFailed: boolean;
     selectedCompanyId: string | null;
     loading: boolean;
     commuteLoading: boolean;
     commute429: boolean;
 
     setCompanies: (companies: Company[]) => void;
+    failCompanies: () => void;
+    reloadCompanies: () => void;
     setAllCompanies: (companies: Company[] | null) => void;
     focusMap: (focus: MapFocus) => void;
     toggleTag: (tag: string) => void;
@@ -58,6 +67,7 @@ export interface MapState {
     setLoading: (loading: boolean) => void;
     setCommuteLoading: (loading: boolean) => void;
     setCommute429: (is429: boolean) => void;
+    setCommuteFailed: (failed: boolean) => void;
 }
 
 // The URL is the source of truth on load, so a shared link opens exactly the sender's view.
@@ -66,6 +76,8 @@ const initialView = parseView(typeof window === 'undefined' ? '' : window.locati
 export const useMapStore = create<MapState>((set) => ({
     companies: [],
     companiesLoaded: false,
+    companiesFailed: false,
+    companiesReload: 0,
     allCompanies: null,
     mapFocus: null,
     selectedTags: initialView.tags,
@@ -76,12 +88,16 @@ export const useMapStore = create<MapState>((set) => ({
     commuteMinutes: initialView.commute?.minutes ?? DEFAULT_COMMUTE_MINUTES,
     commuteAppliedMinutes: initialView.commute?.minutes ?? DEFAULT_COMMUTE_MINUTES,
     commuteCompanyIds: [],
+    commuteRequest: 0,
+    commuteFailed: false,
     selectedCompanyId: null,
     loading: false,
     commuteLoading: false,
     commute429: false,
 
-    setCompanies: (companies) => set({ companies, companiesLoaded: true }),
+    setCompanies: (companies) => set({ companies, companiesLoaded: true, companiesFailed: false }),
+    failCompanies: () => set({ companies: [], companiesLoaded: true, companiesFailed: true }),
+    reloadCompanies: () => set((state) => ({ companiesFailed: false, companiesReload: state.companiesReload + 1 })),
     setAllCompanies: (allCompanies) => set({ allCompanies }),
     // A fresh object per call, so asking for the same place twice still moves the map.
     focusMap: (focus) => set({ mapFocus: { ...focus } }),
@@ -102,8 +118,13 @@ export const useMapStore = create<MapState>((set) => ({
     setHeatmapTech: (heatmapTech) => set({ heatmapTech }),
     setCommuteMinutes: (commuteMinutes) => set({ commuteMinutes }),
     applyCommute: (from, minutes) =>
-        set({ commuteFrom: from.trim(), commuteMinutes: minutes, commuteAppliedMinutes: minutes }),
-    clearCommute: () => set({ commuteFrom: '', commuteCompanyIds: [] }),
+        set((state) => ({
+            commuteFrom: from.trim(),
+            commuteMinutes: minutes,
+            commuteAppliedMinutes: minutes,
+            commuteRequest: state.commuteRequest + 1,
+        })),
+    clearCommute: () => set({ commuteFrom: '', commuteCompanyIds: [], commuteFailed: false }),
     setView: (view) =>
         set((state) => ({
             selectedTags: view.tags,
@@ -120,6 +141,7 @@ export const useMapStore = create<MapState>((set) => ({
     setLoading: (loading) => set({ loading }),
     setCommuteLoading: (commuteLoading) => set({ commuteLoading }),
     setCommute429: (commute429) => set({ commute429 }),
+    setCommuteFailed: (commuteFailed) => set({ commuteFailed }),
 }));
 
 export function selectView(state: MapState): ViewState {

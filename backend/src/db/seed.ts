@@ -2,20 +2,28 @@ import { Pool } from 'pg';
 import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
-import { companies } from './seed-data.example';
+import type { Company } from './seed-data.example';
 import { insertCompany } from './insertCompany';
 
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 
-// ── Step 0: Ensure the database exists ───────────────────────────────────────
-async function ensureDatabase() {
-    const pool = new Pool({
-        connectionString: process.env.DATABASE_URL,
-    });
-    await pool.query(`
-        CREATE DATABASE IF NOT EXISTS ${process.env.DATABASE_NAME}
-    `);
-    await pool.end();
+// ── Step 0: Load the company dataset ─────────────────────────────────────────
+// The real list is private and gitignored, so it is loaded at runtime instead of imported:
+// a static import would break builds on a clean checkout where seed-data.ts does not exist.
+const DEFAULT_SEED_FILE = path.resolve(__dirname, 'seed-data.ts');
+
+async function loadCompanies(): Promise<Company[]> {
+    const file = process.argv[2] ? path.resolve(process.argv[2]) : DEFAULT_SEED_FILE;
+    if (!fs.existsSync(file)) {
+        throw new Error(
+            `Seed data not found at ${file}.\n` +
+            'Copy backend/src/db/seed-data.example.ts to backend/src/db/seed-data.ts and edit it, ' +
+            'or pass a file: npm run seed --workspace=backend -- <path>'
+        );
+    }
+    const { companies } = await import(file);
+    if (!Array.isArray(companies)) throw new Error(`${file} must export a "companies" array.`);
+    return companies;
 }
 
 // ── Step 1: Apply schema DDL (CREATE TABLE IF NOT EXISTS) ─────────────────────
@@ -42,15 +50,15 @@ async function truncateTables(pool: Pool) {
 
 // ── Main seed function ────────────────────────────────────────────────────────
 async function seed() {
-    // 1. Ensure the database exists
-    await ensureDatabase();
-
-    // 2. Connect to the target DB
+    // 1. Connect to the target DB (docker compose already created it)
     const pool = new Pool({
         connectionString: process.env.DATABASE_URL,
     });
 
     try {
+        // 2. Load the dataset before touching any table, so a missing file never wipes the data
+        const companies = await loadCompanies();
+
         // 3. Create tables / extensions if they don't exist
         await ensureSchema(pool);
 

@@ -32,7 +32,7 @@ export default function SearchBox() {
     const [open, setOpen] = useState(false);
     const [activeIndex, setActiveIndex] = useState(0);
     const [formName, setFormName] = useState<string | null>(null);
-    const allCompanies = useAllCompanies();
+    const { companies: allCompanies } = useAllCompanies();
 
     const index = useMemo(() => (allCompanies ? buildIndex(allCompanies) : null), [allCompanies]);
     const options = useMemo(() => (index ? search(index, query) : []), [index, query]);
