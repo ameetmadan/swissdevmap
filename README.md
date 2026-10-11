@@ -181,7 +181,13 @@ Then run the seed script:
 npm run seed --workspace=backend
 ```
 
-> **Note:** `seed-data.ts` is `.gitignore`d so your company list stays private.
+The script reads `backend/src/db/seed-data.ts` and stops with an error if it is missing. To load another file (for example the example data), pass its path:
+
+```bash
+npm run seed --workspace=backend -- backend/src/db/seed-data.example.ts
+```
+
+> **Note:** `seed-data.ts` is `.gitignore`d so your company list stays private. The seed script drops and recreates the tables, so only run it against a database you can wipe.
 
 ### 5 — Start the development servers
 

@@ -41,24 +41,25 @@ function parseDurationMinutes(duration: string): number {
 }
 
 // GET /api/commute?from=Zürich&minutes=30
-router.get('/', async (req: Request, res: Response) => {
+export async function commuteSearch(req: Request, res: Response) {
     const { from, minutes } = req.query;
     console.log(`[Commute] Request received. from=${from}, minutes=${minutes}`);
 
-    const maxMinutes = parseInt((minutes as string) || '30', 10);
+    const parsedMinutes = parseInt(String(minutes ?? ''), 10);
+    const maxMinutes = Number.isFinite(parsedMinutes) ? parsedMinutes : 30;
     console.log(`[Commute] Parsed maxMinutes: ${maxMinutes}`);
 
-    if (!from) {
+    if (typeof from !== 'string' || !from.trim()) {
         console.warn('[Commute] Missing "from" parameter');
         return res.status(400).json({ error: '`from` city query param required' });
     }
 
-    const fromCity = from as string;
+    const fromCity = from.trim();
 
     try {
         // Step 1: Get all Swiss cities with companies from DB
         const { rows: cityRows } = await pool.query(
-            `SELECT DISTINCT city FROM companies ORDER BY city`
+            `SELECT DISTINCT city FROM companies WHERE city IS NOT NULL AND btrim(city) <> '' ORDER BY city`
         );
 
         const destinations = cityRows.map((r: { city: string }) => r.city);
@@ -67,6 +68,7 @@ router.get('/', async (req: Request, res: Response) => {
         // Step 2: Query SBB API for each destination in parallel (max 8 at a time)
         const reachableCities: Set<string> = new Set();
         let hit429 = false;
+        let upstreamFailed = false;
 
         const chunks: string[][] = [];
         for (let i = 0; i < destinations.length; i += 8) {
@@ -117,8 +119,12 @@ router.get('/', async (req: Request, res: Response) => {
                         if (apiErr.response?.status === 429) {
                             console.warn(`[Commute] SBB API rate-limited (429) for ${dest}`);
                             hit429 = true;
+                        } else if (apiErr.response && apiErr.response.status < 500) {
+                            // The API understood and refused this pair (e.g. an unknown station): treat it as unreachable.
+                            console.warn(`[Commute] SBB API rejected ${dest} (${apiErr.response.status})`);
                         } else {
                             console.error(`[Commute] SBB API Error for ${dest}:`, apiErr.message);
+                            upstreamFailed = true;
                         }
                     }
                 })
@@ -130,6 +136,12 @@ router.get('/', async (req: Request, res: Response) => {
             return res.status(429).json({ error: 'SBB API rate limit reached — please try again later' });
         }
 
+        if (upstreamFailed) {
+            // Answering with the cities that happened to respond would tell visitors that employers are
+            // outside their commute when they were never checked.
+            return res.status(502).json({ error: 'SBB API unavailable — please try again later' });
+        }
+
         // Step 3: Return companies in reachable cities
         console.log(`[Commute] Final reachable cities (${reachableCities.size}):`, Array.from(reachableCities));
 
@@ -138,12 +150,6 @@ router.get('/', async (req: Request, res: Response) => {
         }
 
         const cityList = Array.from(reachableCities);
-        // Note: The placeholders logic below was incorrect in original code if using ANY(ARRAY[...])
-        // It used ANY(ARRAY[$1, $2...]) but passed cityList as values. 
-        // Correct usage for Postgres 'ANY' with array parameter is typically `ANY($1)` where $1 is the array.
-        // However, the original code used `ANY(ARRAY[${placeholders}])` constructing the array literal in SQL from parameters.
-        // Let's debug this query construction too.
-
         const placeholders = cityList.map((_, i) => `$${i + 1}`).join(', ');
         const query = `
             SELECT c.id, c.name, c.city, c.lat, c.lng,
@@ -169,6 +175,8 @@ router.get('/', async (req: Request, res: Response) => {
         console.error('[Commute] Commute filter CRITICAL error:', err);
         res.status(500).json({ error: 'Commute filter failed', details: err.message });
     }
-});
+}
+
+router.get('/', commuteSearch);
 
 export default router;

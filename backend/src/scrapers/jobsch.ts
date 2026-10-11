@@ -1,31 +1,7 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { pool } from '../db/pool';
-
-const TECH_KEYWORDS: Record<string, string> = {
-    react: 'frontend', vue: 'frontend', angular: 'frontend', svelte: 'frontend',
-    'next.js': 'frontend', nextjs: 'frontend',
-    java: 'backend', kotlin: 'backend', scala: 'backend', python: 'backend',
-    go: 'backend', golang: 'backend', rust: 'backend', 'c#': 'backend', 'c++': 'backend',
-    'node.js': 'backend', node: 'backend', typescript: 'backend', ruby: 'backend',
-    aws: 'cloud', azure: 'cloud', gcp: 'cloud', 'google cloud': 'cloud',
-    kubernetes: 'devops', docker: 'devops', terraform: 'devops', kafka: 'devops',
-    postgresql: 'backend', postgres: 'backend', mysql: 'backend', mongodb: 'backend', redis: 'backend',
-};
-
-function extractTags(text: string): { tag: string; category: string }[] {
-    const lower = text.toLowerCase();
-    const found: Map<string, string> = new Map();
-    for (const [keyword, category] of Object.entries(TECH_KEYWORDS)) {
-        const regex = new RegExp(`\\b${keyword.replace(/[+.]/g, '\\$&')}\\b`, 'i');
-        if (regex.test(lower)) {
-            const display = ['go', 'golang'].includes(keyword) ? 'Go'
-                : keyword.charAt(0).toUpperCase() + keyword.slice(1);
-            found.set(display, category);
-        }
-    }
-    return Array.from(found.entries()).map(([tag, category]) => ({ tag, category }));
-}
+import { extractTags } from '../lib/technologies';
 
 export async function scrapeJobsCh() {
     console.log('🔍 Starting Jobs.ch scraper...');
