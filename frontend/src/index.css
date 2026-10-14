@@ -64,6 +64,8 @@ body {
   background: var(--bg-base);
   overflow: hidden;
   height: 100vh;
+  /* Mobile browsers: 100vh is the toolbar-hidden height, taller than what's visible */
+  height: 100dvh;
   width: 100vw;
 }
 
@@ -71,6 +73,7 @@ body {
 .app-shell {
   display: block;
   height: 100vh;
+  height: 100dvh;
   width: 100vw;
   position: relative;
   /* No overflow:hidden — it creates a stacking context that traps fixed children */
@@ -84,6 +87,7 @@ body {
   left: 0;
   width: var(--sidebar-width);
   height: 100vh;
+  height: 100dvh;
   background: var(--bg-glass);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -1627,12 +1631,16 @@ option {
 }
 
 @media (max-width: 768px) {
-  /* Compact on phones: clear of the zoom buttons, and the map stays tappable above it. */
+  /* Compact on phones: clear of the zoom buttons, and the map stays tappable above it.
+     Fixed like the bottom sheet so both measure from the same visible viewport edge. */
   .onboarding {
+    position: fixed;
     left: 12px;
     right: 64px;
-    bottom: 84px;
+    bottom: calc(68px + env(safe-area-inset-bottom, 0px) + 12px);
     width: auto;
+    max-height: calc(100dvh - 68px - env(safe-area-inset-bottom, 0px) - 200px);
+    overflow-y: auto;
     padding: 12px 14px;
   }
 
