@@ -64,7 +64,7 @@
             "handle": "filesystem"
         },
         {
-            "src": "/((?!api/).*)",
+            "src": "/((?!api/|assets/).*)",
             "dest": "/index.html"
         }
     ]

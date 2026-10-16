@@ -1,11 +1,12 @@
-import { lazy, Suspense } from 'react';
+import { Suspense } from 'react';
 import { useLocation } from 'react-router-dom';
 import * as Sentry from '@sentry/react';
 import { parseLandingPath } from './lib/landing';
+import { lazyWithReload } from './lib/lazyWithReload';
 
 // Landing pages are plain content pages that never touch the map, so each side loads on its own.
-const MapApp = lazy(() => import('./MapApp'));
-const LandingPage = lazy(() => import('./components/LandingPage'));
+const MapApp = lazyWithReload(() => import('./MapApp'));
+const LandingPage = lazyWithReload(() => import('./components/LandingPage'));
 
 // Landing pages are plain content pages; everything else is the map.
 function AppInner() {
