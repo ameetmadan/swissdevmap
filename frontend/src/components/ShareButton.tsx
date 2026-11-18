@@ -15,7 +15,7 @@ const LABELS = { copied: 'Link copied', failed: 'Copy failed' } as const;
 
 export default function ShareButton({ surface, getPayload, className, children = 'Share' }: ShareButtonProps) {
     const [feedback, setFeedback] = useState<keyof typeof LABELS | null>(null);
-    const timer = useRef<number>();
+    const timer = useRef<number | undefined>(undefined);
 
     useEffect(() => () => window.clearTimeout(timer.current), []);
 

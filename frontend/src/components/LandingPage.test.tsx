@@ -25,7 +25,8 @@ describe('landing markup parity', () => {
             const rendered = renderToStaticMarkup(
                 <MemoryRouter><LandingContent model={res.model} /></MemoryRouter>,
             );
-            expect(rendered).toBe(landingBodyHtml(res.model));
+            // React Router adds data-discover to links it can prefetch; the edge function's static HTML has none.
+            expect(rendered.replace(/ data-discover="true"/g, '')).toBe(landingBodyHtml(res.model));
         });
     }
 });

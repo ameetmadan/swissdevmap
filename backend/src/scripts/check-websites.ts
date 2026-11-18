@@ -36,7 +36,7 @@ async function checkWebsites() {
                 });
 
                 const contentType = response.headers['content-type'];
-                const isHtml = contentType && contentType.toLowerCase().includes('text/html');
+                const isHtml = typeof contentType === 'string' && contentType.toLowerCase().includes('text/html');
                 const isSuccess = response.status >= 200 && response.status < 300;
 
                 if (isSuccess && isHtml) {

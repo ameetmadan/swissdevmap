@@ -1,0 +1,22 @@
+# GIT-001. PRs are squash-merged, so the PR title becomes the commit on main.
+name: PR title
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  conventional-title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Lint PR title with commitlint
+        env:
+          # Passed through env, never interpolated into the script, so a crafted title can't inject shell.
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          printf '%s\n' "$PR_TITLE" | npx --yes \
+            -p @commitlint/cli@21.2.4 -p @commitlint/config-conventional@21.2.4 \
+            commitlint --extends @commitlint/config-conventional
