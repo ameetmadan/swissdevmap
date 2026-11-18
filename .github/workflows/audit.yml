@@ -1,0 +1,28 @@
+# SEC-001. Separate from CI so the weekly run doesn't re-run lint/test/build;
+# advisories land without code changes and only the schedule catches them.
+name: Audit
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 6 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      # Reads the lockfile only, so no install is needed. Dev-only tooling never ships.
+      - run: npm audit --omit=dev --audit-level=high

@@ -5,7 +5,7 @@ const FEEDBACK_MS = 2500;
 
 export default function CopySnippet({ label, text }: { label: string; text: string }) {
     const [feedback, setFeedback] = useState<'copied' | 'failed' | null>(null);
-    const timer = useRef<number>();
+    const timer = useRef<number | undefined>(undefined);
 
     useEffect(() => () => window.clearTimeout(timer.current), []);
 

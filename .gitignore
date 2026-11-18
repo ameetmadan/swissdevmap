@@ -34,3 +34,12 @@ Thumbs.db
 *.swp
 *.swo
 frontend/.env.development
+
+# standards GIT-003 baseline
+.env
+.env.*
+!.env.example
+.venv/
+coverage/
+__pycache__/
+.ruff_cache/

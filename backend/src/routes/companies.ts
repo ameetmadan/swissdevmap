@@ -68,7 +68,7 @@ router.get('/', async (req: Request, res: Response) => {
 const MAX_REF_LENGTH = 80;
 
 // GET /api/companies/:ref  (ref is a company id or its slug)
-router.get('/:ref', async (req: Request, res: Response) => {
+router.get('/:ref', async (req: Request<{ ref: string }>, res: Response) => {
   const { ref } = req.params;
   const byId = isUuid(ref);
   if (!byId && !(ref.length <= MAX_REF_LENGTH && SLUG_RE.test(ref))) {

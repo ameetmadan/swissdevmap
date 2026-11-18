@@ -10,7 +10,7 @@ const openDialogs: HTMLElement[] = [];
  * already took it), Tab and Shift+Tab stay inside, Escape closes it, and focus returns to what opened it.
  * The listener is on the capture phase and stops the event, so a focus trap underneath never sees it.
  */
-export function useModalFocus(panelRef: RefObject<HTMLElement>, onClose: () => void) {
+export function useModalFocus(panelRef: RefObject<HTMLElement | null>, onClose: () => void) {
     const onCloseRef = useRef(onClose);
     onCloseRef.current = onClose;
 
